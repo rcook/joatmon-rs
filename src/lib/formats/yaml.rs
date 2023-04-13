@@ -19,64 +19,54 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-use super::read_text_file;
+use crate::fs::read_text_file;
 use crate::result::Result;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
-pub struct JsonError {
-    _kind: JsonErrorKind,
+pub struct YamlError {
     path: PathBuf,
     message: String,
-    _line: usize,
-    _column: usize,
+    location: Option<serde_yaml::Location>,
 }
 
-#[derive(Debug)]
-pub enum JsonErrorKind {
-    Data,
-    Eof,
-    Io,
-    Syntax,
-}
-
-impl std::fmt::Display for JsonError {
+impl std::fmt::Display for YamlError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} in {}", self.message, self.path.display())
+        match &self.location {
+            Some(loc) => write!(
+                f,
+                "{} at line {} column {} in {}",
+                self.message,
+                loc.line(),
+                loc.column(),
+                self.path.display()
+            ),
+            None => write!(f, "{} in {}", self.message, self.path.display()),
+        }
     }
 }
 
-impl std::error::Error for JsonError {}
+impl std::error::Error for YamlError {}
 
-pub fn read_json_file<T, P>(path: P) -> Result<T>
+pub fn read_yaml_file<T, P>(path: P) -> Result<T>
 where
     T: DeserializeOwned,
     P: AsRef<Path>,
 {
     let s = read_text_file(path.as_ref())?;
-    let value = serde_json::from_str::<T>(&s).map_err(|e| translate_json_error(e, &path))?;
+    let value = serde_yaml::from_str::<T>(&s).map_err(|e| translate_yaml_error(e, &path))?;
     Ok(value)
 }
 
-fn translate_json_error<P>(e: serde_json::Error, path: P) -> Box<dyn std::error::Error>
+fn translate_yaml_error<P>(e: serde_yaml::Error, path: P) -> Box<dyn std::error::Error>
 where
     P: AsRef<Path>,
 {
-    use serde_json::error::Category::*;
-
-    let kind = match e.classify() {
-        Data => JsonErrorKind::Data,
-        Eof => JsonErrorKind::Eof,
-        Io => JsonErrorKind::Io,
-        Syntax => JsonErrorKind::Syntax,
-    };
-    Box::new(JsonError {
-        _kind: kind,
+    Box::new(YamlError {
         path: PathBuf::from(path.as_ref()),
         message: e.to_string(),
-        _line: e.line(),
-        _column: e.column(),
+        location: e.location(),
     })
 }

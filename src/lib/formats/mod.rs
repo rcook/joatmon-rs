@@ -19,12 +19,10 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-mod formats;
-mod fs;
-mod result;
+mod json;
+mod toml;
+mod yaml;
 
-pub use self::formats::{
-    read_json_file, read_toml_file, read_yaml_file, JsonError, JsonErrorKind, TomlError, YamlError,
-};
-pub use self::fs::{read_text_file, safe_create_file, safe_write_file, DirectoryError, FileError};
-pub use self::result::Result;
+pub use self::json::{read_json_file, JsonError, JsonErrorKind};
+pub use self::toml::{read_toml_file, TomlError};
+pub use self::yaml::{read_yaml_file, YamlError};
