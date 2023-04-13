@@ -1,5 +1,5 @@
 [package]
-name = "swiss-army-knife-rs"
+name = "swiss-army-knife"
 version = "0.0.0"
 edition = "2021"
 
