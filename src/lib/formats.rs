@@ -22,10 +22,8 @@
 use super::read_text_file;
 use crate::result::Result;
 use serde::de::DeserializeOwned;
-use std::{
-    fmt::Debug,
-    path::{Path, PathBuf},
-};
+use std::fmt::Debug;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct JsonError {
