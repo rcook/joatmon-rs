@@ -1,0 +1,18 @@
+[package]
+name = "swiss-army-knife-rs"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+name = "swiss_army_knife"
+path = "src/lib/mod.rs"
+
+[[bin]]
+name = "swiss_army_knife"
+path = "src/bin/main.rs"
+
+[dependencies]
+colored = "2.0.0"
+serde = { version = "1.0.160", features = ["derive"] }
+serde_json = "1.0.96"
+tempdir = "0.3.7"
