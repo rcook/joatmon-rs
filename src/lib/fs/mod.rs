@@ -19,8 +19,10 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+mod find;
 mod read;
 mod write;
 
+pub use self::find::{find_sentinel_dir, find_sentinel_file};
 pub use self::read::{open_file, read_bytes, read_text_file, FileReadError, FileReadErrorKind};
 pub use self::write::{safe_create_file, safe_write_file, FileWriteError, FileWriteErrorKind};

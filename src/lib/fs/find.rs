@@ -1,0 +1,151 @@
+// Copyright (c) 2023 Richard Cook
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+use std::path::{Path, PathBuf};
+
+#[allow(unused)]
+pub fn find_sentinel_dir<P, Q>(
+    sentinel_name: P,
+    start_dir: Q,
+    limit: Option<i32>,
+) -> Option<PathBuf>
+where
+    P: AsRef<Path>,
+    Q: AsRef<Path>,
+{
+    let mut dir = start_dir.as_ref().to_path_buf();
+    let mut count = limit.unwrap_or(30);
+    loop {
+        if count == 0 {
+            return None;
+        }
+
+        let sentinel_dir_path = dir.join(sentinel_name.as_ref());
+        if sentinel_dir_path.is_dir() {
+            return Some(sentinel_dir_path);
+        }
+        if !dir.pop() {
+            return None;
+        }
+        count -= 1;
+    }
+}
+
+#[allow(unused)]
+pub fn find_sentinel_file<P, Q>(
+    sentinel_name: P,
+    start_dir: Q,
+    limit: Option<i32>,
+) -> Option<PathBuf>
+where
+    P: AsRef<Path>,
+    Q: AsRef<Path>,
+{
+    let mut dir = start_dir.as_ref().to_path_buf();
+    let mut count = limit.unwrap_or(30);
+    loop {
+        if count == 0 {
+            return None;
+        }
+
+        let sentinel_file_path = dir.join(sentinel_name.as_ref());
+        if sentinel_file_path.is_file() {
+            return Some(sentinel_file_path);
+        }
+        if !dir.pop() {
+            return None;
+        }
+        count -= 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{find_sentinel_dir, find_sentinel_file};
+    use anyhow::Result;
+    use std::fs::create_dir_all;
+    use std::fs::write;
+    use tempdir::TempDir;
+
+    #[test]
+    fn test_find_sentinel_dir_found() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
+        let sentinel_dir_path = temp_dir.path().join("aaa").join("SENTINEL");
+        create_dir_all(&start_dir)?;
+        create_dir_all(&sentinel_dir_path)?;
+
+        // Act
+        let value = find_sentinel_dir("SENTINEL", &start_dir, Some(3));
+
+        // Asset
+        assert_eq!(Some(sentinel_dir_path), value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_find_sentinel_dir_not_found() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
+        create_dir_all(&start_dir)?;
+
+        // Act
+        let value = find_sentinel_dir("SENTINEL", &start_dir, Some(3));
+
+        // Asset
+        assert!(value.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_find_sentinel_file_found() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
+        let sentinel_file_path = temp_dir.path().join("aaa").join("SENTINEL");
+        create_dir_all(&start_dir)?;
+        write(&sentinel_file_path, "CONTENTS")?;
+
+        // Act
+        let value = find_sentinel_file("SENTINEL", &start_dir, Some(3));
+
+        // Asset
+        assert_eq!(Some(sentinel_file_path), value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_find_sentinel_file_not_found() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
+        create_dir_all(&start_dir)?;
+
+        // Act
+        let value = find_sentinel_file("SENTINEL", &start_dir, Some(3));
+
+        // Asset
+        assert!(value.is_none());
+        Ok(())
+    }
+}
