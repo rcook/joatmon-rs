@@ -19,16 +19,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use anyhow::Result;
 use colored::Colorize;
 use serde_json::Value;
 use std::process::exit;
-use swiss_army_knife::{
-    read_json_file, read_toml_file, read_yaml_file, safe_write_file, FileError, JsonError,
-    TomlError, YamlError,
-};
+use swiss_army_knife::{read_json_file, read_toml_file, read_yaml_file, safe_write_file};
 use tempdir::TempDir;
-
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn run() -> Result<()> {
     let temp_dir = TempDir::new("swiss-army-knife")?;
@@ -55,17 +51,7 @@ fn main() {
     exit(match run() {
         Ok(()) => 0,
         Err(e) => {
-            if let Some(file_error) = e.downcast_ref::<FileError>() {
-                println!("{}", format!("File error: {}", file_error).bright_red());
-            } else if let Some(json_error) = e.downcast_ref::<JsonError>() {
-                println!("{}", format!("JSON error: {}", json_error).bright_red());
-            } else if let Some(yaml_error) = e.downcast_ref::<YamlError>() {
-                println!("{}", format!("YAML error: {}", yaml_error).bright_red());
-            } else if let Some(toml_error) = e.downcast_ref::<TomlError>() {
-                println!("{}", format!("TOML error: {}", toml_error).bright_red());
-            } else {
-                println!("{}", format!("Unhandled error: {:#?}", e).red());
-            }
+            println!("{}", format!("{}", e).bright_red());
             1
         }
     })

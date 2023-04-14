@@ -20,63 +20,161 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 use crate::fs::read_text_file;
-use crate::result::Result;
+use anyhow::Error as AnyhowError;
 use serde::de::DeserializeOwned;
+use serde_json::Error as SerdeJsonError;
+use std::error::Error as StdError;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+use std::result::Result as StdResult;
+use thiserror::Error;
 
-#[derive(Debug)]
-pub struct JsonError {
-    _kind: JsonErrorKind,
-    path: PathBuf,
-    message: String,
-    _line: usize,
-    _column: usize,
-}
-
-#[derive(Debug)]
+#[allow(unused)]
+#[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub enum JsonErrorKind {
     Data,
     Eof,
     Io,
     Syntax,
+    Other,
 }
 
-impl std::fmt::Display for JsonError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} in {}", self.message, self.path.display())
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct JsonError(#[from] JsonErrorImpl);
+
+impl JsonError {
+    #[allow(unused)]
+    pub fn kind(&self) -> JsonErrorKind {
+        match self.0 {
+            JsonErrorImpl::Data { .. } => JsonErrorKind::Data,
+            JsonErrorImpl::Eof { .. } => JsonErrorKind::Eof,
+            JsonErrorImpl::Io { .. } => JsonErrorKind::Io,
+            JsonErrorImpl::Syntax { .. } => JsonErrorKind::Syntax,
+            _ => JsonErrorKind::Other,
+        }
+    }
+
+    #[allow(unused)]
+    pub fn is_data(&self) -> bool {
+        self.kind() == JsonErrorKind::Data
+    }
+
+    #[allow(unused)]
+    pub fn is_eof(&self) -> bool {
+        self.kind() == JsonErrorKind::Eof
+    }
+
+    #[allow(unused)]
+    pub fn is_io(&self) -> bool {
+        self.kind() == JsonErrorKind::Io
+    }
+
+    #[allow(unused)]
+    pub fn is_syntax(&self) -> bool {
+        self.kind() == JsonErrorKind::Syntax
+    }
+
+    #[allow(unused)]
+    pub fn is_other(&self) -> bool {
+        self.kind() == JsonErrorKind::Other
+    }
+
+    fn other<E>(e: E) -> Self
+    where
+        E: StdError + Send + Sync + 'static,
+    {
+        Self(JsonErrorImpl::Other(AnyhowError::new(e)))
+    }
+
+    fn convert<P>(e: SerdeJsonError, path: P) -> Self
+    where
+        P: AsRef<Path>,
+    {
+        use serde_json::error::Category::*;
+
+        let message = e.to_string();
+        let path = path.as_ref().to_path_buf();
+        Self(match e.classify() {
+            Data => JsonErrorImpl::Data { message, path },
+            Eof => JsonErrorImpl::Eof { message, path },
+            Io => JsonErrorImpl::Io { message, path },
+            Syntax => JsonErrorImpl::Syntax { message, path },
+        })
     }
 }
 
-impl std::error::Error for JsonError {}
+#[derive(Debug, Error)]
+enum JsonErrorImpl {
+    #[error("{message} in {path}")]
+    Data { message: String, path: PathBuf },
+    #[error("{message} in {path}")]
+    Eof { message: String, path: PathBuf },
+    #[error("{message} in {path}")]
+    Io { message: String, path: PathBuf },
+    #[error("{message} in {path}")]
+    Syntax { message: String, path: PathBuf },
+    #[error(transparent)]
+    Other(AnyhowError),
+}
 
-pub fn read_json_file<T, P>(path: P) -> Result<T>
+#[allow(unused)]
+pub fn read_json_file<T, P>(path: P) -> StdResult<T, JsonError>
 where
     T: DeserializeOwned,
     P: AsRef<Path>,
 {
-    let s = read_text_file(path.as_ref())?;
-    let value = serde_json::from_str::<T>(&s).map_err(|e| translate_json_error(e, &path))?;
+    let s = read_text_file(path.as_ref()).map_err(JsonError::other)?;
+    let value = serde_json::from_str::<T>(&s).map_err(|e| JsonError::convert(e, &path))?;
     Ok(value)
 }
 
-fn translate_json_error<P>(e: serde_json::Error, path: P) -> Box<dyn std::error::Error>
-where
-    P: AsRef<Path>,
-{
-    use serde_json::error::Category::*;
+#[cfg(test)]
+mod tests {
+    use super::{read_json_file, JsonErrorKind};
+    use anyhow::Result;
+    use serde_json::{json, Value};
+    use std::fs::write;
+    use tempdir::TempDir;
 
-    let kind = match e.classify() {
-        Data => JsonErrorKind::Data,
-        Eof => JsonErrorKind::Eof,
-        Io => JsonErrorKind::Io,
-        Syntax => JsonErrorKind::Syntax,
-    };
-    Box::new(JsonError {
-        _kind: kind,
-        path: PathBuf::from(path.as_ref()),
-        message: e.to_string(),
-        _line: e.line(),
-        _column: e.column(),
-    })
+    #[test]
+    fn test_read_json_file_succeeds() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let path = temp_dir.path().join("file.json");
+        write(&path, "{\"message\": \"hello-world\"}")?;
+
+        // Act
+        let value = read_json_file::<Value, _>(&path)?;
+
+        // Assert
+        assert_eq!(json!({"message": "hello-world"}), value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_json_file_invalid_fails() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let path = temp_dir.path().join("file.json");
+        write(&path, "xxx{\"message\": \"hello-world\"}")?;
+
+        // Act
+        let e = match read_json_file::<Value, _>(&path) {
+            Ok(_) => panic!("read_json_file must fail"),
+            Err(e) => e,
+        };
+
+        // Assert
+        assert_eq!(JsonErrorKind::Syntax, e.kind());
+        assert!(!e.is_data());
+        assert!(!e.is_eof());
+        assert!(!e.is_io());
+        assert!(e.is_syntax());
+        assert!(!e.is_other());
+        let message = format!("{}", e);
+        assert!(message.contains(path.to_str().expect("must be valid string")));
+        Ok(())
+    }
 }

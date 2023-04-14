@@ -19,139 +19,117 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-use crate::fs::read_text_file;
 use anyhow::Error as AnyhowError;
-use serde::de::DeserializeOwned;
 use std::error::Error as StdError;
-use std::fmt::Debug;
+use std::fs::read_to_string;
+use std::io::Error as IOError;
 use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use thiserror::Error;
-use toml::de::Error as TomlDeError;
 
 #[allow(unused)]
 #[derive(Debug, PartialEq)]
 #[non_exhaustive]
-pub enum TomlErrorKind {
-    Syntax,
+pub enum FileReadErrorKind {
+    NotFound,
     Other,
 }
 
 #[derive(Debug, Error)]
 #[error(transparent)]
-pub struct TomlError(#[from] TomlErrorImpl);
+pub struct FileReadError(#[from] FileReadErrorImpl);
 
-impl TomlError {
+impl FileReadError {
     #[allow(unused)]
-    pub fn kind(&self) -> TomlErrorKind {
+    pub fn kind(&self) -> FileReadErrorKind {
         match self.0 {
-            TomlErrorImpl::Syntax { .. } => TomlErrorKind::Syntax,
-            _ => TomlErrorKind::Other,
+            FileReadErrorImpl::NotFound(_) => FileReadErrorKind::NotFound,
+            _ => FileReadErrorKind::Other,
         }
     }
 
     #[allow(unused)]
-    pub fn is_syntax(&self) -> bool {
-        self.kind() == TomlErrorKind::Syntax
+    pub fn is_not_found(&self) -> bool {
+        self.kind() == FileReadErrorKind::NotFound
     }
 
     #[allow(unused)]
     pub fn is_other(&self) -> bool {
-        self.kind() == TomlErrorKind::Other
+        self.kind() == FileReadErrorKind::Other
     }
 
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
     {
-        Self(TomlErrorImpl::Other(AnyhowError::new(e)))
+        Self(FileReadErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert<P>(e: TomlDeError, path: P) -> Self
+    fn convert<P>(e: IOError, path: P) -> Self
     where
         P: AsRef<Path>,
     {
-        let message = match e.span() {
-            Some(s) => format!(
-                "{} at span {}:{} in {}",
-                e.message(),
-                s.start,
-                s.end,
-                path.as_ref().display()
-            ),
-            None => format!("{} in {}", e.message(), path.as_ref().display()),
-        };
-
-        Self(TomlErrorImpl::Syntax {
-            message,
-            path: path.as_ref().to_path_buf(),
-            span: e.span(),
-        })
+        use std::io::ErrorKind::*;
+        match e.kind() {
+            NotFound => Self(FileReadErrorImpl::NotFound(path.as_ref().to_path_buf())),
+            _ => Self::other(e),
+        }
     }
 }
 
 #[derive(Debug, Error)]
-enum TomlErrorImpl {
-    #[error("{message}")]
-    Syntax {
-        message: String,
-        path: PathBuf,
-        span: Option<std::ops::Range<usize>>,
-    },
+enum FileReadErrorImpl {
+    #[error("File {0} not found")]
+    NotFound(PathBuf),
     #[error(transparent)]
     Other(AnyhowError),
 }
 
 #[allow(unused)]
-pub fn read_toml_file<T, P>(path: P) -> StdResult<T, TomlError>
+pub fn read_text_file<P>(path: P) -> StdResult<String, FileReadError>
 where
-    T: DeserializeOwned,
     P: AsRef<Path>,
 {
-    let s = read_text_file(path.as_ref()).map_err(TomlError::other)?;
-    let value = toml::from_str::<T>(&s).map_err(|e| TomlError::convert(e, &path))?;
-    Ok(value)
+    read_to_string(path.as_ref()).map_err(|e| FileReadError::convert(e, &path))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{read_toml_file, TomlErrorKind};
+    use super::{read_text_file, FileReadErrorKind};
     use anyhow::Result;
     use std::fs::write;
     use tempdir::TempDir;
-    use toml::{toml, Value};
 
     #[test]
-    fn test_read_toml_file_succeeds() -> Result<()> {
+    fn test_read_text_file_succeeds() -> Result<()> {
         // Arrange
         let temp_dir = TempDir::new("swiss-army-knife-test")?;
-        let path = temp_dir.path().join("file.toml");
-        write(&path, "message = \"hello-world\"")?;
+        let path = temp_dir.path().join("file.txt");
+        write(&path, "hello-world")?;
 
         // Act
-        let value = read_toml_file::<toml::Table, _>(&path)?;
+        let value = read_text_file(&path)?;
 
         // Assert
-        assert_eq!(toml!(message = "hello-world"), value);
+        assert_eq!("hello-world", value);
         Ok(())
     }
 
     #[test]
-    fn test_read_toml_file_invalid_fails() -> Result<()> {
+    fn test_read_text_file_not_found_fails() -> Result<()> {
         // Arrange
         let temp_dir = TempDir::new("swiss-army-knife-test")?;
-        let path = temp_dir.path().join("file.toml");
-        write(&path, "xxx{\"message\": \"hello-world\"}")?;
+        let path = temp_dir.path().join("file.txt");
 
         // Act
-        let e = match read_toml_file::<Value, _>(&path) {
-            Ok(_) => panic!("read_toml_file must fail"),
+        let e = match read_text_file(&path) {
+            Ok(_) => panic!("read_text_file must fail"),
             Err(e) => e,
         };
 
         // Assert
-        assert_eq!(TomlErrorKind::Syntax, e.kind());
-        assert!(e.is_syntax());
+        assert_eq!(FileReadErrorKind::NotFound, e.kind());
+        assert!(e.is_not_found());
         assert!(!e.is_other());
         let message = format!("{}", e);
         assert!(message.contains(path.to_str().expect("must be valid string")));

@@ -21,10 +21,12 @@
 //
 mod formats;
 mod fs;
-mod result;
 
 pub use self::formats::{
-    read_json_file, read_toml_file, read_yaml_file, JsonError, JsonErrorKind, TomlError, YamlError,
+    read_json_file, read_toml_file, read_yaml_file, JsonError, JsonErrorKind, TomlError,
+    TomlErrorKind, YamlError, YamlErrorKind,
 };
-pub use self::fs::{read_text_file, safe_create_file, safe_write_file, DirectoryError, FileError};
-pub use self::result::Result;
+pub use self::fs::{
+    read_text_file, safe_create_file, safe_write_file, FileReadError, FileReadErrorKind,
+    FileWriteError, FileWriteErrorKind,
+};

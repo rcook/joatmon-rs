@@ -19,4 +19,8 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+mod read;
+mod write;
+
+pub use self::read::{read_text_file, FileReadError, FileReadErrorKind};
+pub use self::write::{safe_create_file, safe_write_file, FileWriteError, FileWriteErrorKind};
