@@ -8,7 +8,7 @@ name = "swiss_army_knife"
 path = "src/lib/mod.rs"
 
 [[bin]]
-name = "swiss_army_knife"
+name = "swiss-army-knife"
 path = "src/bin/main.rs"
 
 [dependencies]
