@@ -27,6 +27,6 @@ pub use self::formats::{
     TomlErrorKind, YamlError, YamlErrorKind,
 };
 pub use self::fs::{
-    open_file, read_text_file, safe_create_file, safe_write_file, FileReadError, FileReadErrorKind,
-    FileWriteError, FileWriteErrorKind,
+    open_file, read_bytes, read_text_file, safe_create_file, safe_write_file, FileReadError,
+    FileReadErrorKind, FileWriteError, FileWriteErrorKind,
 };

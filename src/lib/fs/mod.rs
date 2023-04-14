@@ -22,5 +22,5 @@
 mod read;
 mod write;
 
-pub use self::read::{open_file, read_text_file, FileReadError, FileReadErrorKind};
+pub use self::read::{open_file, read_bytes, read_text_file, FileReadError, FileReadErrorKind};
 pub use self::write::{safe_create_file, safe_write_file, FileWriteError, FileWriteErrorKind};
