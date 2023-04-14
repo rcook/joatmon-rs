@@ -21,7 +21,7 @@
 //
 use anyhow::Error as AnyhowError;
 use std::error::Error as StdError;
-use std::fs::{read_to_string, File};
+use std::fs::{read, read_to_string, File};
 use std::io::Error as IOError;
 use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
@@ -101,9 +101,17 @@ where
     File::open(path.as_ref()).map_err(|e| FileReadError::convert(e, &path))
 }
 
+#[allow(unused)]
+pub fn read_bytes<P>(path: P) -> StdResult<Vec<u8>, FileReadError>
+where
+    P: AsRef<Path>,
+{
+    read(&path).map_err(|e| FileReadError::convert(e, &path))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{open_file, read_text_file, FileReadErrorKind};
+    use super::{open_file, read_bytes, read_text_file, FileReadErrorKind};
     use anyhow::Result;
     use std::fs::write;
     use std::io::Read;
@@ -171,6 +179,42 @@ mod tests {
         // Act
         let e = match open_file(&path) {
             Ok(_) => panic!("open_file must fail"),
+            Err(e) => e,
+        };
+
+        // Assert
+        assert_eq!(FileReadErrorKind::NotFound, e.kind());
+        assert!(e.is_not_found());
+        assert!(!e.is_other());
+        let message = format!("{}", e);
+        assert!(message.contains(path.to_str().expect("must be valid string")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_bytes_succeeds() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let path = temp_dir.path().join("file.txt");
+        write(&path, "hello-world")?;
+
+        // Act
+        let value = read_bytes(&path)?;
+
+        // Assert
+        assert_eq!(br"hello-world".to_vec(), value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_bytes_not_found_fails() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let path = temp_dir.path().join("file.txt");
+
+        // Act
+        let e = match read_bytes(&path) {
+            Ok(_) => panic!("read_bytes must fail"),
             Err(e) => e,
         };
 
