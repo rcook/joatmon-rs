@@ -1,0 +1,4 @@
+[build.env]
+passthrough = [
+    "SWISS_ARMY_KNIFE_BUILD_VERSION"
+]
