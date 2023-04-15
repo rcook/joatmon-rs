@@ -28,6 +28,7 @@ use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use thiserror::Error;
 use toml::de::Error as TomlDeError;
+use toml_edit::{Document, TomlError as TomlEditError};
 
 #[allow(unused)]
 #[derive(Debug, PartialEq)]
@@ -88,6 +89,28 @@ impl TomlError {
             span: e.span(),
         })
     }
+
+    fn convert_edit<P>(e: TomlEditError, path: P) -> Self
+    where
+        P: AsRef<Path>,
+    {
+        let message = match e.span() {
+            Some(s) => format!(
+                "{} at span {}:{} in {}",
+                e.message(),
+                s.start,
+                s.end,
+                path.as_ref().display()
+            ),
+            None => format!("{} in {}", e.message(), path.as_ref().display()),
+        };
+
+        Self(TomlErrorImpl::Syntax {
+            message,
+            path: path.as_ref().to_path_buf(),
+            span: e.span(),
+        })
+    }
 }
 
 #[derive(Debug, Error)]
@@ -113,9 +136,21 @@ where
     Ok(value)
 }
 
+#[allow(unused)]
+pub fn read_toml_file_edit<P>(path: P) -> StdResult<Document, TomlError>
+where
+    P: AsRef<Path>,
+{
+    let s = read_text_file(path.as_ref()).map_err(TomlError::other)?;
+    let doc = s
+        .parse::<Document>()
+        .map_err(|e| TomlError::convert_edit(e, &path))?;
+    Ok(doc)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{read_toml_file, TomlErrorKind};
+    use super::{read_toml_file, read_toml_file_edit, TomlErrorKind};
     use anyhow::Result;
     use std::fs::write;
     use tempdir::TempDir;
@@ -146,6 +181,68 @@ mod tests {
         // Act
         let e = match read_toml_file::<Value, _>(&path) {
             Ok(_) => panic!("read_toml_file must fail"),
+            Err(e) => e,
+        };
+
+        // Assert
+        assert_eq!(TomlErrorKind::Syntax, e.kind());
+        assert!(e.is_syntax());
+        assert!(!e.is_other());
+        let message = format!("{}", e);
+        assert!(message.contains(path.to_str().expect("must be valid string")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_toml_file_edit_succeeds() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let path = temp_dir.path().join("file.toml");
+        let cargo_toml = r#"[package]
+name = "swiss-army-knife"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+name = "swiss_army_knife"
+path = "src/lib/mod.rs"
+
+[[bin]]
+name = "swiss-army-knife"
+path = "src/bin/main.rs"
+
+[dependencies]
+anyhow = "1.0.70"
+colored = "2.0.0"
+serde = { version = "1.0.160", features = ["derive"] }
+serde_json = "1.0.96"
+serde_yaml = "0.9.21"
+tempdir = "0.3.7"
+thiserror = "1.0.40"
+toml = "0.7.3"
+toml_edit = "0.19.8"
+"#;
+        write(&path, cargo_toml)?;
+
+        // Act
+        let doc = read_toml_file_edit(&path)?;
+        let result = doc.to_string();
+
+        // Assert
+        assert_eq!(cargo_toml, result);
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_toml_file_edit_invalid_fails() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let path = temp_dir.path().join("file.toml");
+        write(&path, "xxx{\"message\": \"hello-world\"}")?;
+
+        // Act
+        let e = match read_toml_file_edit(&path) {
+            Ok(_) => panic!("read_toml_file_edit must fail"),
             Err(e) => e,
         };
 

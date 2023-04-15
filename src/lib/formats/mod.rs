@@ -24,5 +24,5 @@ mod toml;
 mod yaml;
 
 pub use self::json::{read_json_file, JsonError, JsonErrorKind};
-pub use self::toml::{read_toml_file, TomlError, TomlErrorKind};
+pub use self::toml::{read_toml_file, read_toml_file_edit, TomlError, TomlErrorKind};
 pub use self::yaml::{read_yaml_file, YamlError, YamlErrorKind};

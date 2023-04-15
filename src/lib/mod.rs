@@ -23,8 +23,8 @@ mod formats;
 mod fs;
 
 pub use self::formats::{
-    read_json_file, read_toml_file, read_yaml_file, JsonError, JsonErrorKind, TomlError,
-    TomlErrorKind, YamlError, YamlErrorKind,
+    read_json_file, read_toml_file, read_toml_file_edit, read_yaml_file, JsonError, JsonErrorKind,
+    TomlError, TomlErrorKind, YamlError, YamlErrorKind,
 };
 pub use self::fs::{
     find_sentinel_dir, find_sentinel_file, open_file, read_bytes, read_text_file, safe_create_file,
