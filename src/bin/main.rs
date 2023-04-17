@@ -19,40 +19,19 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-use anyhow::Result;
-use colored::Colorize;
-use joatmon::{read_json_file, read_toml_file, read_yaml_file, safe_write_file};
-use serde_json::Value;
-use std::process::exit;
-use tempdir::TempDir;
-
-fn run() -> Result<()> {
-    let temp_dir = TempDir::new("joatmon")?;
-
-    let json_file_path = temp_dir.path().join("temp.json");
-    safe_write_file(&json_file_path, "{\"name\": 123}", false)?;
-    let value = read_json_file::<Value, _>(&json_file_path)?;
-    println!("value={:#?}", value);
-
-    let yaml_file_path = temp_dir.path().join("temp.yaml");
-    safe_write_file(&yaml_file_path, "name: 123", false)?;
-    let value = read_yaml_file::<Value, _>(&yaml_file_path)?;
-    println!("value={:#?}", value);
-
-    let toml_file_path = temp_dir.path().join("temp.toml");
-    safe_write_file(&toml_file_path, "name = 123", false)?;
-    let value = read_toml_file::<Value, _>(&toml_file_path)?;
-    println!("value={:#?}", value);
-
-    Ok(())
-}
+const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+const PACKAGE_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
+const PACKAGE_HOME_PAGE: &str = env!("CARGO_PKG_HOMEPAGE");
+const PACKAGE_BUILD_VERSION: Option<&str> = option_env!("RUST_TOOL_ACTION_BUILD_VERSION");
 
 fn main() {
-    exit(match run() {
-        Ok(()) => 0,
-        Err(e) => {
-            println!("{}", format!("{}", e).bright_red());
-            1
-        }
-    })
+    println!("PACKAGE_NAME={}", PACKAGE_NAME);
+    println!("PACKAGE_DESCRIPTION={}", PACKAGE_DESCRIPTION);
+    println!("PACKAGE_VERSION={}", PACKAGE_VERSION);
+    println!("PACKAGE_HOME_PAGE={}", PACKAGE_HOME_PAGE);
+    println!(
+        "PACKAGE_BUILD_VERSION={}",
+        PACKAGE_BUILD_VERSION.unwrap_or("(unofficial build)")
+    );
 }
