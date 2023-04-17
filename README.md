@@ -1,7 +1,8 @@
 # Jack of All Trades, Master of None
 
-![Release](https://github.com/rcook/joatmon-rs/actions/workflows/release.yaml/badge.svg)
 ![CI](https://github.com/rcook/joatmon-rs/actions/workflows/ci.yaml/badge.svg)
+![Release](https://github.com/rcook/joatmon-rs/actions/workflows/release.yaml/badge.svg)
+![Publish](https://github.com/rcook/joatmon-rs/actions/workflows/publish.yaml/badge.svg)
 
 General-purpose helpers functions:
 
