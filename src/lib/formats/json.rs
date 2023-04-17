@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn test_read_json_file_succeeds() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.json");
         write(&path, "{\"message\": \"hello-world\"}")?;
 
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn test_read_json_file_invalid_fails() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.json");
         write(&path, "xxx{\"message\": \"hello-world\"}")?;
 

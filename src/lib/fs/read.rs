@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn test_read_text_file_succeeds() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.txt");
         write(&path, "hello-world")?;
 
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn test_read_text_file_not_found_fails() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.txt");
 
         // Act
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn test_open_file_succeeds() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.txt");
         write(&path, "hello-world")?;
 
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn test_open_file_not_found_fails() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.txt");
 
         // Act
@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn test_read_bytes_succeeds() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.txt");
         write(&path, "hello-world")?;
 
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn test_read_bytes_not_found_fails() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let path = temp_dir.path().join("file.txt");
 
         // Act

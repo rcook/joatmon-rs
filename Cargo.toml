@@ -1,14 +1,14 @@
 [package]
-name = "swiss-army-knife"
+name = "joatmon"
 version = "0.0.4"
 edition = "2021"
 
 [lib]
-name = "swiss_army_knife"
+name = "joatmon"
 path = "src/lib/mod.rs"
 
 [[bin]]
-name = "swiss-army-knife"
+name = "joatmon"
 path = "src/bin/main.rs"
 
 [dependencies]

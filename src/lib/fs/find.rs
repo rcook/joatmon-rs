@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn test_find_sentinel_dir_found() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
         let sentinel_dir_path = temp_dir.path().join("aaa").join("SENTINEL");
         create_dir_all(&start_dir)?;
@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn test_find_sentinel_dir_not_found() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
         create_dir_all(&start_dir)?;
 
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn test_find_sentinel_file_found() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
         let sentinel_file_path = temp_dir.path().join("aaa").join("SENTINEL");
         create_dir_all(&start_dir)?;
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn test_find_sentinel_file_not_found() -> Result<()> {
         // Arrange
-        let temp_dir = TempDir::new("swiss-army-knife-test")?;
+        let temp_dir = TempDir::new("joatmon-test")?;
         let start_dir = temp_dir.path().join("aaa").join("bbb").join("ccc");
         create_dir_all(&start_dir)?;
 

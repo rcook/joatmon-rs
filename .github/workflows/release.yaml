@@ -1,7 +1,7 @@
 name: Release
 
 env:
-  project: swiss-army-knife
+  project: joatmon
 
 permissions:
   contents: write
@@ -62,7 +62,7 @@ jobs:
       - name: Set variables
         shell: bash
         run: |
-          echo "SWISS_ARMY_KNIFE_BUILD_VERSION=${{ github.ref_name }}-$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "RUST_TOOL_ACTION_BUILD_VERSION=${{ github.ref_name }}-$(git rev-parse HEAD)" >> $GITHUB_ENV
           echo "archive_file_name=${{ env.project }}-${{ github.ref_name }}-${{ matrix.target }}${{ matrix.archive_ext }}" >> $GITHUB_ENV
 
       - name: Build

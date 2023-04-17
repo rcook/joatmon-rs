@@ -21,13 +21,13 @@
 //
 use anyhow::Result;
 use colored::Colorize;
+use joatmon::{read_json_file, read_toml_file, read_yaml_file, safe_write_file};
 use serde_json::Value;
 use std::process::exit;
-use swiss_army_knife::{read_json_file, read_toml_file, read_yaml_file, safe_write_file};
 use tempdir::TempDir;
 
 fn run() -> Result<()> {
-    let temp_dir = TempDir::new("swiss-army-knife")?;
+    let temp_dir = TempDir::new("joatmon")?;
 
     let json_file_path = temp_dir.path().join("temp.json");
     safe_write_file(&json_file_path, "{\"name\": 123}", false)?;
