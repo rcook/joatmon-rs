@@ -1,11 +1,17 @@
 name: Publish
 
 on:
-  workflow_run:
-    workflows:
-      - Release
-    types:
-      - completed
+  push:
+    tags:
+      - v*.*.*
+
+#on:
+#  workflow_run:
+#    workflows:
+#      - Release
+#    types:
+#      - completed
+
 jobs:
   publish:
     name: Publish to crates.io

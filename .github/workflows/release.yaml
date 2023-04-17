@@ -7,10 +7,15 @@ env:
 permissions:
   contents: write
 
+#on:
+#  push:
+#    tags:
+#      - v*.*.*
+
 on:
   push:
-    tags:
-      - v*.*.*
+    branches:
+      - disabled
 
 jobs:
   release:
