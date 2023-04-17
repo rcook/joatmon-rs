@@ -12,11 +12,11 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      steps:
-        - name: Check out
-          uses: actions/checkout@v3
+      - name: Check out
+        uses: actions/checkout@v3
 
-      - shell: bash
+      - name: Cargo publish
+        shell: bash
         run: |
           cargo publish --token ${{ env.JOATMON_RS_CRATES_IO_API_TOKEN }}
         env:
