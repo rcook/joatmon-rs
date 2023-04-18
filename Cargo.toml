@@ -7,14 +7,6 @@ name = "joatmon"
 version = "0.0.13"
 edition = "2021"
 
-[lib]
-name = "joatmon"
-path = "src/lib/mod.rs"
-
-[[bin]]
-name = "joatmon"
-path = "src/bin/main.rs"
-
 [dependencies]
 anyhow = "1.0.70"
 serde = { version = "1.0.160", features = ["derive"] }
