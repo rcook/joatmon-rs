@@ -4,7 +4,7 @@ description = "Jack of All Trades Master of None"
 homepage = "https://github.com/rcook/joatmon-rs/"
 license = "MIT"
 name = "joatmon"
-version = "0.0.13"
+version = "0.0.14"
 edition = "2021"
 
 [dependencies]
