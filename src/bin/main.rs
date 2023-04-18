@@ -23,15 +23,10 @@ const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 const PACKAGE_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const PACKAGE_HOME_PAGE: &str = env!("CARGO_PKG_HOMEPAGE");
-const PACKAGE_BUILD_VERSION: Option<&str> = option_env!("RUST_TOOL_ACTION_BUILD_VERSION");
 
 fn main() {
     println!("PACKAGE_NAME={}", PACKAGE_NAME);
     println!("PACKAGE_DESCRIPTION={}", PACKAGE_DESCRIPTION);
     println!("PACKAGE_VERSION={}", PACKAGE_VERSION);
     println!("PACKAGE_HOME_PAGE={}", PACKAGE_HOME_PAGE);
-    println!(
-        "PACKAGE_BUILD_VERSION={}",
-        PACKAGE_BUILD_VERSION.unwrap_or("(unofficial build)")
-    );
 }
