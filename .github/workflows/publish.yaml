@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build, test and publish Rust package
-        uses: rcook/rust-package-action@v0.0.1
+        uses: rcook/rust-package-action@v0.0.2
         with:
           target: x86_64-unknown-linux-gnu
           publish: true
