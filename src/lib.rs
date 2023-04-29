@@ -29,4 +29,5 @@ pub use self::formats::{
 pub use self::fs::{
     find_sentinel_dir, find_sentinel_file, open_file, read_bytes, read_text_file, safe_create_file,
     safe_write_file, FileReadError, FileReadErrorKind, FileWriteError, FileWriteErrorKind,
+    WorkingDirectory,
 };
