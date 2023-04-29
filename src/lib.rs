@@ -27,7 +27,7 @@ pub use self::formats::{
     TomlError, TomlErrorKind, YamlError, YamlErrorKind,
 };
 pub use self::fs::{
-    find_sentinel_dir, find_sentinel_file, open_file, read_bytes, read_text_file, safe_create_file,
-    safe_write_file, FileReadError, FileReadErrorKind, FileWriteError, FileWriteErrorKind,
-    WorkingDirectory,
+    find_sentinel_dir, find_sentinel_file, get_base_name, open_file, path_to_str, read_bytes,
+    read_text_file, safe_create_file, safe_write_file, FileReadError, FileReadErrorKind,
+    FileWriteError, FileWriteErrorKind, WorkingDirectory,
 };
