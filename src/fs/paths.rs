@@ -44,7 +44,7 @@ mod tests {
 
     // https://doc.rust-lang.org/stable/std/ffi/index.html#conversions
     #[cfg(not(target_os = "windows"))]
-    fn make_path_containing_invalid_unicode() -> PathBuf {
+    fn make_path_containing_invalid_unicode() -> std::path::PathBuf {
         use std::ffi::OsString;
         use std::os::unix::ffi::OsStringExt;
         use std::path::PathBuf;
