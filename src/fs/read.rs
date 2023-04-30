@@ -31,6 +31,7 @@ use thiserror::Error;
 #[derive(Debug, PartialEq)]
 #[non_exhaustive]
 pub enum FileReadErrorKind {
+    IsADirectory,
     NotFound,
     Other,
 }
@@ -43,9 +44,15 @@ impl FileReadError {
     #[allow(unused)]
     pub fn kind(&self) -> FileReadErrorKind {
         match self.0 {
+            FileReadErrorImpl::IsADirectory(_) => FileReadErrorKind::IsADirectory,
             FileReadErrorImpl::NotFound(_) => FileReadErrorKind::NotFound,
             _ => FileReadErrorKind::Other,
         }
+    }
+
+    #[allow(unused)]
+    pub fn is_is_a_directory(&self) -> bool {
+        self.kind() == FileReadErrorKind::IsADirectory
     }
 
     #[allow(unused)]
@@ -70,15 +77,33 @@ impl FileReadError {
         P: AsRef<Path>,
     {
         use std::io::ErrorKind::*;
-        match e.kind() {
-            NotFound => Self(FileReadErrorImpl::NotFound(path.as_ref().to_path_buf())),
-            _ => Self::other(e),
+
+        let kind = e.kind();
+        println!("KIND={:#?}", kind);
+
+        // io_error_more adds std::io::ErrorKind::IsADirectory etc.
+        // https://doc.rust-lang.org/stable/std/io/enum.ErrorKind.html#variant.IsADirectory
+        // For now, we'll match on the debug string for these unstable values
+        match format!("{:?}", kind).as_str() {
+            "IsADirectory" => {
+                return Self(FileReadErrorImpl::IsADirectory(path.as_ref().to_path_buf()))
+            }
+            _ => {}
         }
+
+        match kind {
+            NotFound => return Self(FileReadErrorImpl::NotFound(path.as_ref().to_path_buf())),
+            _ => {}
+        }
+
+        Self::other(e)
     }
 }
 
 #[derive(Debug, Error)]
 enum FileReadErrorImpl {
+    #[error("File system object {0} is a directory not a file")]
+    IsADirectory(PathBuf),
     #[error("File {0} not found")]
     NotFound(PathBuf),
     #[error(transparent)]
@@ -98,6 +123,7 @@ pub fn open_file<P>(path: P) -> StdResult<File, FileReadError>
 where
     P: AsRef<Path>,
 {
+    println!("PATH={:?}", path.as_ref());
     File::open(path.as_ref()).map_err(|e| FileReadError::convert(e, &path))
 }
 
@@ -133,6 +159,27 @@ mod tests {
     }
 
     #[test]
+    fn test_read_text_file_is_a_directory_fails() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("joatmon-test")?;
+
+        // Act
+        let e = match read_text_file(&temp_dir.path()) {
+            Ok(_) => panic!("read_text_file must fail"),
+            Err(e) => e,
+        };
+
+        // Assert
+        assert_eq!(FileReadErrorKind::IsADirectory, e.kind());
+        assert!(e.is_is_a_directory());
+        assert!(!e.is_not_found());
+        assert!(!e.is_other());
+        let message = format!("{}", e);
+        assert!(message.contains(temp_dir.path().to_str().expect("must be valid string")));
+        Ok(())
+    }
+
+    #[test]
     fn test_read_text_file_not_found_fails() -> Result<()> {
         // Arrange
         let temp_dir = TempDir::new("joatmon-test")?;
@@ -146,6 +193,7 @@ mod tests {
 
         // Assert
         assert_eq!(FileReadErrorKind::NotFound, e.kind());
+        assert!(!e.is_is_a_directory());
         assert!(e.is_not_found());
         assert!(!e.is_other());
         let message = format!("{}", e);
