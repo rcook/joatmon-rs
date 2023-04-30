@@ -41,13 +41,14 @@ impl WorkingDirectory {
     }
 
     pub fn close(&mut self) -> IOResult<()> {
-        Ok(match &self.saved_dir {
+        match &self.saved_dir {
             Some(d) => {
-                set_current_dir(&d)?;
+                set_current_dir(d)?;
                 self.saved_dir = None
             }
             None => (),
-        })
+        };
+        Ok(())
     }
 }
 

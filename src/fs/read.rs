@@ -168,7 +168,7 @@ mod tests {
         let temp_dir = TempDir::new("joatmon-test")?;
 
         // Act
-        let e = match read_text_file(&temp_dir.path()) {
+        let e = match read_text_file(temp_dir.path()) {
             Ok(_) => panic!("read_text_file must fail"),
             Err(e) => e,
         };
