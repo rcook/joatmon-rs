@@ -40,7 +40,12 @@ pub fn get_base_name(path: &Path) -> Option<&str> {
 mod tests {
     use super::{get_base_name, path_to_str};
     use rstest::rstest;
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
     use std::path::Path;
+    use std::path::PathBuf;
+
+    const INVALID_UNICODE: [u8; 1] = [192];
 
     #[rstest]
     #[case(Some("file"), Path::new("/path/to/file"))]
@@ -53,5 +58,12 @@ mod tests {
     #[case("/path/to/file", Path::new("/path/to/file"))]
     fn path_to_str_basics(#[case] expected_str: &str, #[case] input: &Path) {
         assert_eq!(expected_str, path_to_str(input));
+    }
+
+    #[test]
+    #[should_panic]
+    fn path_to_str_invalid_unicode_panics() {
+        let path = PathBuf::from(OsString::from_vec(INVALID_UNICODE.to_vec()));
+        _ = path_to_str(&path)
     }
 }
