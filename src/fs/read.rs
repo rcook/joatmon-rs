@@ -84,7 +84,7 @@ impl FileReadError {
         }
 
         #[cfg(not(target_os = "windows"))]
-        fn is_is_a_directory(kind: ErrorKind, _path: &Path) {
+        fn is_is_a_directory(kind: ErrorKind, _path: &Path) -> bool {
             // io_error_more adds std::io::ErrorKind::IsADirectory etc.
             // https://doc.rust-lang.org/stable/std/io/enum.ErrorKind.html#variant.IsADirectory
             // For now, we'll match on the debug string for these unstable values
