@@ -40,12 +40,17 @@ pub fn get_base_name(path: &Path) -> Option<&str> {
 mod tests {
     use super::{get_base_name, path_to_str};
     use rstest::rstest;
-    use std::ffi::OsString;
-    use std::os::unix::ffi::OsStringExt;
     use std::path::Path;
-    use std::path::PathBuf;
 
-    const INVALID_UNICODE: [u8; 1] = [192];
+    // https://doc.rust-lang.org/stable/std/ffi/index.html#conversions
+    #[cfg(not(target_os = "windows"))]
+    fn make_path_containing_invalid_unicode() -> PathBuf {
+        use std::ffi::OsString;
+        use std::os::unix::ffi::OsStringExt;
+        use std::path::PathBuf;
+        const INVALID_UTF8: [u8; 1] = [192];
+        PathBuf::from(OsString::from_vec(INVALID_UTF8.to_vec()))
+    }
 
     #[rstest]
     #[case(Some("file"), Path::new("/path/to/file"))]
@@ -62,8 +67,9 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[cfg(not(target_os = "windows"))]
     fn path_to_str_invalid_unicode_panics() {
-        let path = PathBuf::from(OsString::from_vec(INVALID_UNICODE.to_vec()));
+        let path = make_path_containing_invalid_unicode();
         _ = path_to_str(&path)
     }
 }
