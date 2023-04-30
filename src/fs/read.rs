@@ -76,24 +76,29 @@ impl FileReadError {
     where
         P: AsRef<Path>,
     {
-        use std::io::ErrorKind::*;
+        use std::io::ErrorKind::{self, *};
 
-        let kind = e.kind();
-        println!("KIND={:#?}", kind);
-
-        // io_error_more adds std::io::ErrorKind::IsADirectory etc.
-        // https://doc.rust-lang.org/stable/std/io/enum.ErrorKind.html#variant.IsADirectory
-        // For now, we'll match on the debug string for these unstable values
-        match format!("{:?}", kind).as_str() {
-            "IsADirectory" => {
-                return Self(FileReadErrorImpl::IsADirectory(path.as_ref().to_path_buf()))
-            }
-            _ => {}
+        #[cfg(target_os = "windows")]
+        fn is_is_a_directory(kind: ErrorKind, path: &Path) -> bool {
+            kind == PermissionDenied && path.is_dir()
         }
 
-        match kind {
-            NotFound => return Self(FileReadErrorImpl::NotFound(path.as_ref().to_path_buf())),
-            _ => {}
+        #[cfg(not(target_os = "windows"))]
+        fn is_is_a_directory(kind: ErrorKind, _path: &Path) {
+            // io_error_more adds std::io::ErrorKind::IsADirectory etc.
+            // https://doc.rust-lang.org/stable/std/io/enum.ErrorKind.html#variant.IsADirectory
+            // For now, we'll match on the debug string for these unstable values
+            format!("{:?}", kind).as_str() == "IsADirectory"
+        }
+
+        let kind = e.kind();
+
+        if is_is_a_directory(kind, path.as_ref()) {
+            return Self(FileReadErrorImpl::IsADirectory(path.as_ref().to_path_buf()));
+        }
+
+        if kind == NotFound {
+            return Self(FileReadErrorImpl::NotFound(path.as_ref().to_path_buf()));
         }
 
         Self::other(e)
@@ -123,7 +128,6 @@ pub fn open_file<P>(path: P) -> StdResult<File, FileReadError>
 where
     P: AsRef<Path>,
 {
-    println!("PATH={:?}", path.as_ref());
     File::open(path.as_ref()).map_err(|e| FileReadError::convert(e, &path))
 }
 
