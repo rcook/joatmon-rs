@@ -62,6 +62,7 @@ impl Drop for WorkingDirectory {
 mod tests {
     use super::WorkingDirectory;
     use anyhow::Result;
+    use serial_test::serial;
     use std::env::current_dir;
     use std::path::{Path, PathBuf};
     use tempdir::TempDir;
@@ -85,6 +86,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_drop() -> Result<()> {
         let temp_dir = TempDir::new("joatmon-test")?;
         let original_dir = current_dir()?;
@@ -100,6 +102,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_close_then_drop() -> Result<()> {
         let temp_dir = TempDir::new("joatmon-test")?;
         let original_dir = current_dir()?;
