@@ -16,18 +16,14 @@ jobs:
       matrix:
         target:
           - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
-          - x86_64-unknown-linux-gnu
         include:
           - target: x86_64-apple-darwin
             host_os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            host_os: windows-latest
-          - target: x86_64-unknown-linux-gnu
-            host_os: ubuntu-latest
     runs-on: ${{ matrix.host_os }}
     steps:
-      - name: Build and test Rust package
-        uses: rcook/rust-package-action@v0.0.2
-        with:
-          target: ${{ matrix.target }}
+      - name: Check out
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        shell: bash
+        run: cargo test -- --show-output

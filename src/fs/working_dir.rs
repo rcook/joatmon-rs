@@ -72,11 +72,20 @@ mod tests {
         P: AsRef<Path>,
         Q: AsRef<Path>,
     {
-        let left = crate::path_to_str(left.as_ref());
+        use crate::path_to_str;
+        println!(
+            "BEGIN: left={} right={}",
+            left.as_ref().display(),
+            right.as_ref().display()
+        );
+        let left = path_to_str(left.as_ref());
         let left = left.strip_prefix("/private").unwrap_or(left);
-        let right = crate::path_to_str(right.as_ref());
+        let right = path_to_str(right.as_ref());
         let right = right.strip_prefix("/private").unwrap_or(right);
-        left == right
+        println!("INTERMEDIATE: left={} right={}", left, right);
+        let result = left == right;
+        println!("END: result={}", result);
+        result
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -92,10 +101,13 @@ mod tests {
     fn test_drop() -> Result<()> {
         let temp_dir = TempDir::new("joatmon-test")?;
         let original_dir = current_dir()?;
+        println!("ASSERT FALSE");
         assert!(!compare_dirs(temp_dir.path(), &original_dir));
         let working_dir = WorkingDirectory::change(&temp_dir)?;
+        println!("ASSERT TRUE");
         assert!(compare_dirs(temp_dir.path(), current_dir()?));
         drop(working_dir);
+        println!("ASSERT TRUE");
         assert!(compare_dirs(&original_dir, current_dir()?));
         Ok(())
     }
@@ -104,12 +116,16 @@ mod tests {
     fn test_close_then_drop() -> Result<()> {
         let temp_dir = TempDir::new("joatmon-test")?;
         let original_dir = current_dir()?;
+        println!("ASSERT FALSE");
         assert!(!compare_dirs(temp_dir.path(), &original_dir));
         let mut working_dir = WorkingDirectory::change(&temp_dir)?;
+        println!("ASSERT TRUE");
         assert!(compare_dirs(temp_dir.path(), current_dir()?));
         working_dir.close()?;
+        println!("ASSERT TRUE");
         assert!(compare_dirs(&original_dir, current_dir()?));
         drop(working_dir);
+        println!("ASSERT TRUE");
         assert!(compare_dirs(&original_dir, current_dir()?));
         Ok(())
     }
