@@ -19,16 +19,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-mod error;
-mod formats;
-mod fs;
+use std::fmt::{Debug, Display};
 
-pub use self::formats::{
-    read_json_file, read_toml_file, read_toml_file_edit, read_yaml_file, JsonError, JsonErrorKind,
-    TomlError, TomlErrorKind, YamlError, YamlErrorKind,
-};
-pub use self::fs::{
-    find_sentinel_dir, find_sentinel_file, get_base_name, open_file, path_to_str, read_bytes,
-    read_text_file, safe_create_file, safe_write_file, FileReadError, FileReadErrorKind,
-    FileWriteError, FileWriteErrorKind, WorkingDirectory,
-};
+pub trait HasOtherError {
+    fn is_other(&self) -> bool;
+
+    fn downcast_other_ref<E>(&self) -> Option<&E>
+    where
+        E: Display + Debug + Send + Sync + 'static;
+}

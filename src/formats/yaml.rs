@@ -19,12 +19,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use crate::error::HasOtherError;
 use crate::fs::read_text_file;
 use anyhow::Error as AnyhowError;
 use serde::de::DeserializeOwned;
 use serde_yaml::{Error as SerdeYamlError, Location};
 use std::error::Error as StdError;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use thiserror::Error;
@@ -55,11 +56,6 @@ impl YamlError {
         self.kind() == YamlErrorKind::Syntax
     }
 
-    #[allow(unused)]
-    pub fn is_other(&self) -> bool {
-        self.kind() == YamlErrorKind::Other
-    }
-
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -76,6 +72,23 @@ impl YamlError {
             location: e.location(),
             path: path.as_ref().to_path_buf(),
         })
+    }
+}
+
+impl HasOtherError for YamlError {
+    fn is_other(&self) -> bool {
+        self.kind() == YamlErrorKind::Other
+    }
+
+    fn downcast_other_ref<E>(&self) -> Option<&E>
+    where
+        E: Display + Debug + Send + Sync + 'static,
+    {
+        if let YamlErrorImpl::Other(inner) = &self.0 {
+            inner.downcast_ref::<E>()
+        } else {
+            None
+        }
     }
 }
 
@@ -105,6 +118,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::{read_yaml_file, YamlErrorKind};
+    use crate::error::HasOtherError;
+    use crate::FileReadError;
     use anyhow::Result;
     use serde_yaml::Value;
     use std::fs::write;
@@ -147,6 +162,32 @@ mod tests {
         assert!(!e.is_other());
         let message = format!("{}", e);
         assert!(message.contains(path.to_str().expect("must be valid string")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_yaml_file_nonexistent_fails() -> Result<()> {
+        // Arrange
+        let temp_dir = TempDir::new("joatmon-test")?;
+        let path = temp_dir.path().join("file.yaml");
+
+        // Act
+        let e = match read_yaml_file::<Value, _>(&path) {
+            Ok(_) => panic!("read_yaml_file must fail"),
+            Err(e) => e,
+        };
+
+        // Assert
+        assert_eq!(YamlErrorKind::Other, e.kind());
+        assert!(!e.is_syntax());
+        assert!(e.is_other());
+        let message = format!("{}", e);
+        assert!(message.contains(path.to_str().expect("must be valid string")));
+        assert!(e
+            .downcast_other_ref::<FileReadError>()
+            .expect("must be Some")
+            .is_not_found());
+
         Ok(())
     }
 }

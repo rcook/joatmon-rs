@@ -19,8 +19,10 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use crate::error::HasOtherError;
 use anyhow::Error as AnyhowError;
 use std::error::Error as StdError;
+use std::fmt::{Debug, Display};
 use std::fs::{read, read_to_string, File};
 use std::io::Error as IOError;
 use std::path::{Path, PathBuf};
@@ -58,11 +60,6 @@ impl FileReadError {
     #[allow(unused)]
     pub fn is_not_found(&self) -> bool {
         self.kind() == FileReadErrorKind::NotFound
-    }
-
-    #[allow(unused)]
-    pub fn is_other(&self) -> bool {
-        self.kind() == FileReadErrorKind::Other
     }
 
     fn other<E>(e: E) -> Self
@@ -105,6 +102,23 @@ impl FileReadError {
     }
 }
 
+impl HasOtherError for FileReadError {
+    fn is_other(&self) -> bool {
+        self.kind() == FileReadErrorKind::Other
+    }
+
+    fn downcast_other_ref<E>(&self) -> Option<&E>
+    where
+        E: Display + Debug + Send + Sync + 'static,
+    {
+        if let FileReadErrorImpl::Other(inner) = &self.0 {
+            inner.downcast_ref::<E>()
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 enum FileReadErrorImpl {
     #[error("File system object {0} is a directory not a file")]
@@ -142,6 +156,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{open_file, read_bytes, read_text_file, FileReadErrorKind};
+    use crate::error::HasOtherError;
     use anyhow::Result;
     use std::fs::write;
     use std::io::Read;

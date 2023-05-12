@@ -19,12 +19,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use crate::error::HasOtherError;
 use crate::fs::read_text_file;
 use anyhow::Error as AnyhowError;
 use serde::de::DeserializeOwned;
 use serde_json::Error as SerdeJsonError;
 use std::error::Error as StdError;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use thiserror::Error;
@@ -76,11 +77,6 @@ impl JsonError {
         self.kind() == JsonErrorKind::Syntax
     }
 
-    #[allow(unused)]
-    pub fn is_other(&self) -> bool {
-        self.kind() == JsonErrorKind::Other
-    }
-
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -102,6 +98,23 @@ impl JsonError {
             Io => JsonErrorImpl::Io { message, path },
             Syntax => JsonErrorImpl::Syntax { message, path },
         })
+    }
+}
+
+impl HasOtherError for JsonError {
+    fn is_other(&self) -> bool {
+        self.kind() == JsonErrorKind::Other
+    }
+
+    fn downcast_other_ref<E>(&self) -> Option<&E>
+    where
+        E: Display + Debug + Send + Sync + 'static,
+    {
+        if let JsonErrorImpl::Other(inner) = &self.0 {
+            inner.downcast_ref::<E>()
+        } else {
+            None
+        }
     }
 }
 
@@ -133,6 +146,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{read_json_file, JsonErrorKind};
+    use crate::error::HasOtherError;
     use anyhow::Result;
     use serde_json::{json, Value};
     use std::fs::write;

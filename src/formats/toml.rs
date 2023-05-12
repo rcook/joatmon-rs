@@ -19,11 +19,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use crate::error::HasOtherError;
 use crate::fs::read_text_file;
 use anyhow::Error as AnyhowError;
 use serde::de::DeserializeOwned;
 use std::error::Error as StdError;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use thiserror::Error;
@@ -54,11 +55,6 @@ impl TomlError {
     #[allow(unused)]
     pub fn is_syntax(&self) -> bool {
         self.kind() == TomlErrorKind::Syntax
-    }
-
-    #[allow(unused)]
-    pub fn is_other(&self) -> bool {
-        self.kind() == TomlErrorKind::Other
     }
 
     fn other<E>(e: E) -> Self
@@ -113,6 +109,23 @@ impl TomlError {
     }
 }
 
+impl HasOtherError for TomlError {
+    fn is_other(&self) -> bool {
+        self.kind() == TomlErrorKind::Other
+    }
+
+    fn downcast_other_ref<E>(&self) -> Option<&E>
+    where
+        E: Display + Debug + Send + Sync + 'static,
+    {
+        if let TomlErrorImpl::Other(inner) = &self.0 {
+            inner.downcast_ref::<E>()
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 enum TomlErrorImpl {
     #[error("{message}")]
@@ -151,6 +164,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{read_toml_file, read_toml_file_edit, TomlErrorKind};
+    use crate::error::HasOtherError;
     use anyhow::Result;
     use std::fs::write;
     use tempdir::TempDir;
