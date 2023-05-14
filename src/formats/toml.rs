@@ -57,6 +57,11 @@ impl TomlError {
         self.kind() == TomlErrorKind::Syntax
     }
 
+    #[allow(unused)]
+    pub fn is_other(&self) -> bool {
+        self.kind() == TomlErrorKind::Other
+    }
+
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -111,7 +116,7 @@ impl TomlError {
 
 impl HasOtherError for TomlError {
     fn is_other(&self) -> bool {
-        self.kind() == TomlErrorKind::Other
+        self.is_other()
     }
 
     fn downcast_other_ref<E>(&self) -> Option<&E>
@@ -164,7 +169,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::{read_toml_file, read_toml_file_edit, TomlErrorKind};
-    use crate::error::HasOtherError;
     use anyhow::Result;
     use std::fs::write;
     use tempdir::TempDir;

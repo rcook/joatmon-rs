@@ -62,6 +62,11 @@ impl FileReadError {
         self.kind() == FileReadErrorKind::NotFound
     }
 
+    #[allow(unused)]
+    pub fn is_other(&self) -> bool {
+        self.kind() == FileReadErrorKind::Other
+    }
+
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -104,7 +109,7 @@ impl FileReadError {
 
 impl HasOtherError for FileReadError {
     fn is_other(&self) -> bool {
-        self.kind() == FileReadErrorKind::Other
+        self.is_other()
     }
 
     fn downcast_other_ref<E>(&self) -> Option<&E>
@@ -156,7 +161,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::{open_file, read_bytes, read_text_file, FileReadErrorKind};
-    use crate::error::HasOtherError;
     use anyhow::Result;
     use std::fs::write;
     use std::io::Read;

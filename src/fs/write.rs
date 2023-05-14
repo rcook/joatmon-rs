@@ -55,6 +55,11 @@ impl FileWriteError {
         self.kind() == FileWriteErrorKind::AlreadyExists
     }
 
+    #[allow(unused)]
+    pub fn is_other(&self) -> bool {
+        self.kind() == FileWriteErrorKind::Other
+    }
+
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -78,7 +83,7 @@ impl FileWriteError {
 
 impl HasOtherError for FileWriteError {
     fn is_other(&self) -> bool {
-        self.kind() == FileWriteErrorKind::Other
+        self.is_other()
     }
 
     fn downcast_other_ref<E>(&self) -> Option<&E>
@@ -154,7 +159,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::{safe_create_file, safe_write_file, FileWriteErrorKind};
-    use crate::error::HasOtherError;
     use anyhow::Result;
     use std::fs::{read_to_string, write};
     use std::io::Write;

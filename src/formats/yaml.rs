@@ -56,6 +56,11 @@ impl YamlError {
         self.kind() == YamlErrorKind::Syntax
     }
 
+    #[allow(unused)]
+    pub fn is_other(&self) -> bool {
+        self.kind() == YamlErrorKind::Other
+    }
+
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -77,7 +82,7 @@ impl YamlError {
 
 impl HasOtherError for YamlError {
     fn is_other(&self) -> bool {
-        self.kind() == YamlErrorKind::Other
+        self.is_other()
     }
 
     fn downcast_other_ref<E>(&self) -> Option<&E>

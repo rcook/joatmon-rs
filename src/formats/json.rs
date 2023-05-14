@@ -77,6 +77,11 @@ impl JsonError {
         self.kind() == JsonErrorKind::Syntax
     }
 
+    #[allow(unused)]
+    pub fn is_other(&self) -> bool {
+        self.kind() == JsonErrorKind::Other
+    }
+
     fn other<E>(e: E) -> Self
     where
         E: StdError + Send + Sync + 'static,
@@ -103,7 +108,7 @@ impl JsonError {
 
 impl HasOtherError for JsonError {
     fn is_other(&self) -> bool {
-        self.kind() == JsonErrorKind::Other
+        self.is_other()
     }
 
     fn downcast_other_ref<E>(&self) -> Option<&E>
@@ -146,7 +151,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::{read_json_file, JsonErrorKind};
-    use crate::error::HasOtherError;
     use anyhow::Result;
     use serde_json::{json, Value};
     use std::fs::write;
