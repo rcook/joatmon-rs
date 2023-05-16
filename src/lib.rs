@@ -19,10 +19,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+mod backup;
 mod error;
 mod formats;
 mod fs;
 
+pub use self::backup::{file_name_safe_timestamp, safe_back_up};
 pub use self::error::HasOtherError;
 pub use self::formats::{
     read_json_file, read_toml_file, read_toml_file_edit, read_yaml_file, JsonError, JsonErrorKind,
