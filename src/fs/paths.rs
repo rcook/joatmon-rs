@@ -19,7 +19,8 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-use std::path::{Component, Path};
+use std::ffi::OsString;
+use std::path::{Component, Path, PathBuf};
 
 pub fn path_to_str(path: &Path) -> &str {
     path.to_str()
@@ -36,18 +37,37 @@ pub fn get_base_name(path: &Path) -> Option<&str> {
     })
 }
 
+pub fn label_file_name(path: &Path, label: &str) -> Option<PathBuf> {
+    let mut file_name = OsString::new();
+
+    if let Some(s) = path.file_stem() {
+        file_name.push(s);
+    } else {
+        return None;
+    }
+
+    file_name.push("-");
+    file_name.push(label);
+
+    if let Some(s) = path.extension() {
+        file_name.push(".");
+        file_name.push(s)
+    }
+
+    Some(path.with_file_name(file_name))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{get_base_name, path_to_str};
+    use super::{get_base_name, label_file_name, path_to_str};
     use rstest::rstest;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     // https://doc.rust-lang.org/stable/std/ffi/index.html#conversions
     #[cfg(not(target_os = "windows"))]
     fn make_path_containing_invalid_unicode() -> std::path::PathBuf {
         use std::ffi::OsString;
         use std::os::unix::ffi::OsStringExt;
-        use std::path::PathBuf;
         const INVALID_UTF8: [u8; 1] = [192];
         PathBuf::from(OsString::from_vec(INVALID_UTF8.to_vec()))
     }
@@ -71,5 +91,18 @@ mod tests {
     fn path_to_str_invalid_unicode_panics() {
         let path = make_path_containing_invalid_unicode();
         _ = path_to_str(&path)
+    }
+
+    #[rstest]
+    #[case(Some(PathBuf::from("/aaa/bbb/ccc-ddd.txt")), "/aaa/bbb/ccc.txt", "ddd")]
+    #[case(Some(PathBuf::from("/aaa/bbb/ccc-ddd")), "/aaa/bbb/ccc", "ddd")]
+    #[case(Some(PathBuf::from("ccc-ddd.txt")), "ccc.txt", "ddd")]
+    #[case(Some(PathBuf::from("ccc-ddd")), "ccc", "ddd")]
+    fn label_file_name_basics(
+        #[case] expected_path: Option<PathBuf>,
+        #[case] path: PathBuf,
+        #[case] label: &str,
+    ) {
+        assert_eq!(expected_path, label_file_name(&path, label))
     }
 }
