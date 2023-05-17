@@ -19,12 +19,14 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+mod backup;
 mod find;
 mod paths;
 mod read;
 mod working_dir;
 mod write;
 
+pub use self::backup::{file_name_safe_timestamp, safe_back_up};
 pub use self::find::{find_sentinel_dir, find_sentinel_file};
 pub use self::paths::{get_base_name, path_to_str};
 pub use self::read::{open_file, read_bytes, read_text_file, FileReadError, FileReadErrorKind};
