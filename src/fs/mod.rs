@@ -26,9 +26,9 @@ mod read;
 mod working_dir;
 mod write;
 
-pub use self::backup::{file_name_safe_timestamp, safe_back_up};
+pub use self::backup::safe_back_up;
 pub use self::find::{find_sentinel_dir, find_sentinel_file};
-pub use self::paths::{get_base_name, label_file_name, path_to_str};
+pub use self::paths::{file_name_safe_timestamp, get_base_name, label_file_name, path_to_str};
 pub use self::read::{open_file, read_bytes, read_text_file, FileReadError, FileReadErrorKind};
 pub use self::working_dir::WorkingDirectory;
 pub use self::write::{safe_create_file, safe_write_file, FileWriteError, FileWriteErrorKind};

@@ -19,6 +19,7 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use chrono::{DateTime, SecondsFormat, Utc};
 use std::ffi::OsString;
 use std::path::{Component, Path, PathBuf};
 
@@ -57,9 +58,15 @@ pub fn label_file_name(path: &Path, label: &str) -> Option<PathBuf> {
     Some(path.with_file_name(file_name))
 }
 
+pub fn file_name_safe_timestamp(dt: &DateTime<Utc>) -> String {
+    dt.to_rfc3339_opts(SecondsFormat::Millis, true)
+        .replace(['-', ':', '.'], "")
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{get_base_name, label_file_name, path_to_str};
+    use super::{file_name_safe_timestamp, get_base_name, label_file_name, path_to_str};
+    use chrono::{TimeZone, Utc};
     use rstest::rstest;
     use std::path::{Path, PathBuf};
 
@@ -104,5 +111,14 @@ mod tests {
         #[case] label: &str,
     ) {
         assert_eq!(expected_path, label_file_name(&path, label))
+    }
+
+    #[test]
+    fn file_name_safe_timestamp_basics() {
+        let dt = Utc
+            .with_ymd_and_hms(2019, 3, 17, 16, 43, 0)
+            .single()
+            .expect("must be valid");
+        assert_eq!("20190317T164300000Z", file_name_safe_timestamp(&dt));
     }
 }
