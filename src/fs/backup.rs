@@ -19,8 +19,8 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use super::paths::label_file_name;
 use chrono::{DateTime, SecondsFormat, Utc};
-use std::ffi::OsString;
 use std::fs::{copy, OpenOptions};
 use std::io::{ErrorKind as IOErrorKind, Result as IOResult};
 use std::path::{Path, PathBuf};
@@ -34,34 +34,17 @@ pub fn file_name_safe_timestamp(dt: &DateTime<Utc>) -> String {
         .replace(['-', ':', '.'], "")
 }
 
-fn generate_backup_file_name(path: &Path, dt: &DateTime<Utc>) -> OsString {
+fn generate_backup_path(path: &Path, dt: &DateTime<Utc>) -> PathBuf {
     assert!(path.is_file() && path.is_absolute());
 
-    let mut file_name = OsString::new();
-    if let Some(s) = path.file_stem() {
-        file_name.push(s);
-    } else {
-        file_name.push("BACKUP");
-    }
-    file_name.push("-");
-    file_name.push(file_name_safe_timestamp(dt));
-    if let Some(s) = path.extension() {
-        file_name.push(".");
-        file_name.push(s);
-    }
-
-    file_name
+    let label = file_name_safe_timestamp(dt);
+    label_file_name(path, &label).expect("must succeed")
 }
 
 fn safe_back_up_inner(path: &Path, now: Option<DateTime<Utc>>) -> IOResult<PathBuf> {
     assert!(path.is_file() && path.is_absolute());
 
-    let parent = path.parent().expect("path must have parent");
-
-    let mut backup_path = parent.join(generate_backup_file_name(
-        path,
-        &now.unwrap_or_else(Utc::now),
-    ));
+    let mut backup_path = generate_backup_path(path, &now.unwrap_or_else(Utc::now));
     loop {
         match OpenOptions::new()
             .write(true)
@@ -70,7 +53,7 @@ fn safe_back_up_inner(path: &Path, now: Option<DateTime<Utc>>) -> IOResult<PathB
         {
             Ok(_) => break,
             Err(e) if e.kind() == IOErrorKind::AlreadyExists => {
-                backup_path = parent.join(generate_backup_file_name(path, &Utc::now()));
+                backup_path = generate_backup_path(path, &Utc::now());
             }
             Err(e) => return Err(e),
         }
