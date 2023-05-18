@@ -29,10 +29,7 @@ pub struct WorkingDirectory {
 
 #[allow(unused)]
 impl WorkingDirectory {
-    pub fn change<P>(dir: P) -> IOResult<Self>
-    where
-        P: AsRef<Path>,
-    {
+    pub fn change(dir: &Path) -> IOResult<Self> {
         let saved_dir = current_dir()?;
         set_current_dir(dir)?;
         Ok(Self {
@@ -64,25 +61,17 @@ mod tests {
     use anyhow::Result;
     use serial_test::serial;
     use std::env::current_dir;
-    use std::path::{Path, PathBuf};
+    use std::path::Path;
     use tempdir::TempDir;
 
     #[cfg(target_os = "macos")]
-    fn normalize_dir<P>(path: P) -> PathBuf
-    where
-        P: AsRef<Path>,
-    {
-        use crate::path_to_str;
-        let path = path_to_str(path.as_ref());
-        PathBuf::from(path.strip_prefix("/private").unwrap_or(path))
+    fn normalize_dir(path: &Path) -> &Path {
+        path.strip_prefix("/private").unwrap_or(path)
     }
 
     #[cfg(not(target_os = "macos"))]
-    fn normalize_dir<P>(path: P) -> PathBuf
-    where
-        P: AsRef<Path>,
-    {
-        path.as_ref().to_path_buf()
+    fn normalize_dir(path: &Path) -> &Path {
+        path
     }
 
     #[test]
@@ -91,13 +80,13 @@ mod tests {
         let temp_dir = TempDir::new("joatmon-test")?;
         let original_dir = current_dir()?;
         assert_ne!(normalize_dir(temp_dir.path()), normalize_dir(&original_dir));
-        let working_dir = WorkingDirectory::change(&temp_dir)?;
+        let working_dir = WorkingDirectory::change(temp_dir.path())?;
         assert_eq!(
             normalize_dir(temp_dir.path()),
-            normalize_dir(current_dir()?)
+            normalize_dir(&current_dir()?)
         );
         drop(working_dir);
-        assert_eq!(normalize_dir(&original_dir), normalize_dir(current_dir()?));
+        assert_eq!(normalize_dir(&original_dir), normalize_dir(&current_dir()?));
         Ok(())
     }
 
@@ -107,15 +96,15 @@ mod tests {
         let temp_dir = TempDir::new("joatmon-test")?;
         let original_dir = current_dir()?;
         assert_ne!(normalize_dir(temp_dir.path()), normalize_dir(&original_dir));
-        let mut working_dir = WorkingDirectory::change(&temp_dir)?;
+        let mut working_dir = WorkingDirectory::change(temp_dir.path())?;
         assert_eq!(
             normalize_dir(temp_dir.path()),
-            normalize_dir(current_dir()?)
+            normalize_dir(&current_dir()?)
         );
         working_dir.close()?;
-        assert_eq!(normalize_dir(&original_dir), normalize_dir(current_dir()?));
+        assert_eq!(normalize_dir(&original_dir), normalize_dir(&current_dir()?));
         drop(working_dir);
-        assert_eq!(normalize_dir(&original_dir), normalize_dir(current_dir()?));
+        assert_eq!(normalize_dir(&original_dir), normalize_dir(&current_dir()?));
         Ok(())
     }
 }

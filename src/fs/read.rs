@@ -74,10 +74,7 @@ impl FileReadError {
         Self(FileReadErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert<P>(e: IOError, path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    fn convert(e: IOError, path: &Path) -> Self {
         use std::io::ErrorKind::{self, *};
 
         #[cfg(target_os = "windows")]
@@ -95,12 +92,12 @@ impl FileReadError {
 
         let kind = e.kind();
 
-        if is_is_a_directory(kind, path.as_ref()) {
-            return Self(FileReadErrorImpl::IsADirectory(path.as_ref().to_path_buf()));
+        if is_is_a_directory(kind, path) {
+            return Self(FileReadErrorImpl::IsADirectory(path.to_path_buf()));
         }
 
         if kind == NotFound {
-            return Self(FileReadErrorImpl::NotFound(path.as_ref().to_path_buf()));
+            return Self(FileReadErrorImpl::NotFound(path.to_path_buf()));
         }
 
         Self::other(e)
@@ -135,27 +132,18 @@ enum FileReadErrorImpl {
 }
 
 #[allow(unused)]
-pub fn read_text_file<P>(path: P) -> StdResult<String, FileReadError>
-where
-    P: AsRef<Path>,
-{
-    read_to_string(path.as_ref()).map_err(|e| FileReadError::convert(e, &path))
+pub fn read_text_file(path: &Path) -> StdResult<String, FileReadError> {
+    read_to_string(path).map_err(|e| FileReadError::convert(e, path))
 }
 
 #[allow(unused)]
-pub fn open_file<P>(path: P) -> StdResult<File, FileReadError>
-where
-    P: AsRef<Path>,
-{
-    File::open(path.as_ref()).map_err(|e| FileReadError::convert(e, &path))
+pub fn open_file(path: &Path) -> StdResult<File, FileReadError> {
+    File::open(path).map_err(|e| FileReadError::convert(e, path))
 }
 
 #[allow(unused)]
-pub fn read_bytes<P>(path: P) -> StdResult<Vec<u8>, FileReadError>
-where
-    P: AsRef<Path>,
-{
-    read(&path).map_err(|e| FileReadError::convert(e, &path))
+pub fn read_bytes(path: &Path) -> StdResult<Vec<u8>, FileReadError> {
+    read(path).map_err(|e| FileReadError::convert(e, path))
 }
 
 #[cfg(test)]

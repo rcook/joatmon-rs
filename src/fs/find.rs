@@ -22,57 +22,55 @@
 use std::path::{Path, PathBuf};
 
 #[allow(unused)]
-pub fn find_sentinel_dir<P, Q>(
-    sentinel_name: P,
-    start_dir: Q,
+pub fn find_sentinel_dir(
+    sentinel_name: &Path,
+    start_dir: &Path,
     limit: Option<i32>,
-) -> Option<PathBuf>
-where
-    P: AsRef<Path>,
-    Q: AsRef<Path>,
-{
-    let mut dir = start_dir.as_ref().to_path_buf();
+) -> Option<PathBuf> {
+    let mut dir = start_dir;
     let mut count = limit.unwrap_or(30);
     loop {
         if count == 0 {
             return None;
         }
 
-        let sentinel_dir_path = dir.join(sentinel_name.as_ref());
+        let sentinel_dir_path = dir.join(sentinel_name);
         if sentinel_dir_path.is_dir() {
             return Some(sentinel_dir_path);
         }
-        if !dir.pop() {
-            return None;
+
+        match dir.parent() {
+            Some(d) => dir = d,
+            None => return None,
         }
+
         count -= 1;
     }
 }
 
 #[allow(unused)]
-pub fn find_sentinel_file<P, Q>(
-    sentinel_name: P,
-    start_dir: Q,
+pub fn find_sentinel_file(
+    sentinel_name: &Path,
+    start_dir: &Path,
     limit: Option<i32>,
-) -> Option<PathBuf>
-where
-    P: AsRef<Path>,
-    Q: AsRef<Path>,
-{
-    let mut dir = start_dir.as_ref().to_path_buf();
+) -> Option<PathBuf> {
+    let mut dir = start_dir;
     let mut count = limit.unwrap_or(30);
     loop {
         if count == 0 {
             return None;
         }
 
-        let sentinel_file_path = dir.join(sentinel_name.as_ref());
+        let sentinel_file_path = dir.join(sentinel_name);
         if sentinel_file_path.is_file() {
             return Some(sentinel_file_path);
         }
-        if !dir.pop() {
-            return None;
+
+        match dir.parent() {
+            Some(d) => dir = d,
+            None => return None,
         }
+
         count -= 1;
     }
 }
@@ -83,6 +81,7 @@ mod tests {
     use anyhow::Result;
     use std::fs::create_dir_all;
     use std::fs::write;
+    use std::path::Path;
     use tempdir::TempDir;
 
     #[test]
@@ -95,7 +94,7 @@ mod tests {
         create_dir_all(&sentinel_dir_path)?;
 
         // Act
-        let value = find_sentinel_dir("SENTINEL", &start_dir, Some(3));
+        let value = find_sentinel_dir(Path::new("SENTINEL"), &start_dir, Some(3));
 
         // Asset
         assert_eq!(Some(sentinel_dir_path), value);
@@ -110,7 +109,7 @@ mod tests {
         create_dir_all(&start_dir)?;
 
         // Act
-        let value = find_sentinel_dir("SENTINEL", &start_dir, Some(3));
+        let value = find_sentinel_dir(Path::new("SENTINEL"), &start_dir, Some(3));
 
         // Asset
         assert!(value.is_none());
@@ -127,7 +126,7 @@ mod tests {
         write(&sentinel_file_path, "CONTENTS")?;
 
         // Act
-        let value = find_sentinel_file("SENTINEL", &start_dir, Some(3));
+        let value = find_sentinel_file(Path::new("SENTINEL"), &start_dir, Some(3));
 
         // Asset
         assert_eq!(Some(sentinel_file_path), value);
@@ -142,7 +141,7 @@ mod tests {
         create_dir_all(&start_dir)?;
 
         // Act
-        let value = find_sentinel_file("SENTINEL", &start_dir, Some(3));
+        let value = find_sentinel_file(Path::new("SENTINEL"), &start_dir, Some(3));
 
         // Asset
         assert!(value.is_none());

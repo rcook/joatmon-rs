@@ -67,15 +67,10 @@ impl FileWriteError {
         Self(FileWriteErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert<P>(e: IOError, path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    fn convert(e: IOError, path: &Path) -> Self {
         use std::io::ErrorKind::*;
         match e.kind() {
-            AlreadyExists => Self(FileWriteErrorImpl::AlreadyExists(
-                path.as_ref().to_path_buf(),
-            )),
+            AlreadyExists => Self(FileWriteErrorImpl::AlreadyExists(path.to_path_buf())),
             _ => Self::other(e),
         }
     }
@@ -107,11 +102,8 @@ enum FileWriteErrorImpl {
 }
 
 #[allow(unused)]
-pub fn safe_create_file<P>(path: P, overwrite: bool) -> StdResult<File, FileWriteError>
-where
-    P: AsRef<Path>,
-{
-    ensure_dir(&path)?;
+pub fn safe_create_file(path: &Path, overwrite: bool) -> StdResult<File, FileWriteError> {
+    ensure_dir(path)?;
 
     let mut options = OpenOptions::new();
     options.write(true);
@@ -122,35 +114,35 @@ where
     }
 
     options
-        .open(&path)
-        .map_err(|e| FileWriteError::convert(e, &path))
+        .open(path)
+        .map_err(|e| FileWriteError::convert(e, path))
 }
 
 #[allow(unused)]
-pub fn safe_write_file<P, C>(path: P, contents: C, overwrite: bool) -> StdResult<(), FileWriteError>
+pub fn safe_write_file<C>(
+    path: &Path,
+    contents: C,
+    overwrite: bool,
+) -> StdResult<(), FileWriteError>
 where
-    P: AsRef<Path>,
     C: AsRef<[u8]>,
 {
-    ensure_dir(&path)?;
+    ensure_dir(path)?;
 
     if overwrite {
-        write(&path, contents).map_err(|e| FileWriteError::convert(e, &path))?;
+        write(path, contents).map_err(|e| FileWriteError::convert(e, path))?;
     } else {
-        let mut file = safe_create_file(&path, overwrite)?;
+        let mut file = safe_create_file(path, overwrite)?;
         file.write_all(contents.as_ref())
-            .map_err(|e| FileWriteError::convert(e, &path))?;
+            .map_err(|e| FileWriteError::convert(e, path))?;
     }
 
     Ok(())
 }
 
-fn ensure_dir<P>(file_path: P) -> StdResult<(), FileWriteError>
-where
-    P: AsRef<Path>,
-{
+fn ensure_dir(file_path: &Path) -> StdResult<(), FileWriteError> {
     let mut dir = PathBuf::new();
-    dir.push(&file_path);
+    dir.push(file_path);
     dir.pop();
     create_dir_all(&dir).map_err(FileWriteError::other)?;
     Ok(())

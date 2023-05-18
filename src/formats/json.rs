@@ -89,14 +89,11 @@ impl JsonError {
         Self(JsonErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert<P>(e: SerdeJsonError, path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    fn convert(e: SerdeJsonError, path: &Path) -> Self {
         use serde_json::error::Category::*;
 
         let message = e.to_string();
-        let path = path.as_ref().to_path_buf();
+        let path = path.to_path_buf();
         Self(match e.classify() {
             Data => JsonErrorImpl::Data { message, path },
             Eof => JsonErrorImpl::Eof { message, path },
@@ -138,13 +135,12 @@ enum JsonErrorImpl {
 }
 
 #[allow(unused)]
-pub fn read_json_file<T, P>(path: P) -> StdResult<T, JsonError>
+pub fn read_json_file<T>(path: &Path) -> StdResult<T, JsonError>
 where
     T: DeserializeOwned,
-    P: AsRef<Path>,
 {
-    let s = read_text_file(path.as_ref()).map_err(JsonError::other)?;
-    let value = serde_json::from_str::<T>(&s).map_err(|e| JsonError::convert(e, &path))?;
+    let s = read_text_file(path).map_err(JsonError::other)?;
+    let value = serde_json::from_str::<T>(&s).map_err(|e| JsonError::convert(e, path))?;
     Ok(value)
 }
 
@@ -164,7 +160,7 @@ mod tests {
         write(&path, "{\"message\": \"hello-world\"}")?;
 
         // Act
-        let value = read_json_file::<Value, _>(&path)?;
+        let value = read_json_file::<Value>(&path)?;
 
         // Assert
         assert_eq!(json!({"message": "hello-world"}), value);
@@ -179,7 +175,7 @@ mod tests {
         write(&path, "xxx{\"message\": \"hello-world\"}")?;
 
         // Act
-        let e = match read_json_file::<Value, _>(&path) {
+        let e = match read_json_file::<Value>(&path) {
             Ok(_) => panic!("read_json_file must fail"),
             Err(e) => e,
         };

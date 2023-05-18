@@ -69,46 +69,40 @@ impl TomlError {
         Self(TomlErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert<P>(e: TomlDeError, path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    fn convert(e: TomlDeError, path: &Path) -> Self {
         let message = match e.span() {
             Some(s) => format!(
                 "{} at span {}:{} in {}",
                 e.message(),
                 s.start,
                 s.end,
-                path.as_ref().display()
+                path.display()
             ),
-            None => format!("{} in {}", e.message(), path.as_ref().display()),
+            None => format!("{} in {}", e.message(), path.display()),
         };
 
         Self(TomlErrorImpl::Syntax {
             message,
-            path: path.as_ref().to_path_buf(),
+            path: path.to_path_buf(),
             span: e.span(),
         })
     }
 
-    fn convert_edit<P>(e: TomlEditError, path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    fn convert_edit(e: TomlEditError, path: &Path) -> Self {
         let message = match e.span() {
             Some(s) => format!(
                 "{} at span {}:{} in {}",
                 e.message(),
                 s.start,
                 s.end,
-                path.as_ref().display()
+                path.display()
             ),
-            None => format!("{} in {}", e.message(), path.as_ref().display()),
+            None => format!("{} in {}", e.message(), path.display()),
         };
 
         Self(TomlErrorImpl::Syntax {
             message,
-            path: path.as_ref().to_path_buf(),
+            path: path.to_path_buf(),
             span: e.span(),
         })
     }
@@ -144,25 +138,21 @@ enum TomlErrorImpl {
 }
 
 #[allow(unused)]
-pub fn read_toml_file<T, P>(path: P) -> StdResult<T, TomlError>
+pub fn read_toml_file<T>(path: &Path) -> StdResult<T, TomlError>
 where
     T: DeserializeOwned,
-    P: AsRef<Path>,
 {
-    let s = read_text_file(path.as_ref()).map_err(TomlError::other)?;
-    let value = toml::from_str::<T>(&s).map_err(|e| TomlError::convert(e, &path))?;
+    let s = read_text_file(path).map_err(TomlError::other)?;
+    let value = toml::from_str::<T>(&s).map_err(|e| TomlError::convert(e, path))?;
     Ok(value)
 }
 
 #[allow(unused)]
-pub fn read_toml_file_edit<P>(path: P) -> StdResult<Document, TomlError>
-where
-    P: AsRef<Path>,
-{
-    let s = read_text_file(path.as_ref()).map_err(TomlError::other)?;
+pub fn read_toml_file_edit(path: &Path) -> StdResult<Document, TomlError> {
+    let s = read_text_file(path).map_err(TomlError::other)?;
     let doc = s
         .parse::<Document>()
-        .map_err(|e| TomlError::convert_edit(e, &path))?;
+        .map_err(|e| TomlError::convert_edit(e, path))?;
     Ok(doc)
 }
 
@@ -182,7 +172,7 @@ mod tests {
         write(&path, "message = \"hello-world\"")?;
 
         // Act
-        let value = read_toml_file::<toml::Table, _>(&path)?;
+        let value = read_toml_file::<toml::Table>(&path)?;
 
         // Assert
         assert_eq!(toml!(message = "hello-world"), value);
@@ -197,7 +187,7 @@ mod tests {
         write(&path, "xxx{\"message\": \"hello-world\"}")?;
 
         // Act
-        let e = match read_toml_file::<Value, _>(&path) {
+        let e = match read_toml_file::<Value>(&path) {
             Ok(_) => panic!("read_toml_file must fail"),
             Err(e) => e,
         };

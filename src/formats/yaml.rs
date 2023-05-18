@@ -68,14 +68,11 @@ impl YamlError {
         Self(YamlErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert<P>(e: SerdeYamlError, path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    fn convert(e: SerdeYamlError, path: &Path) -> Self {
         Self(YamlErrorImpl::Syntax {
             message: e.to_string(),
             location: e.location(),
-            path: path.as_ref().to_path_buf(),
+            path: path.to_path_buf(),
         })
     }
 }
@@ -110,13 +107,12 @@ enum YamlErrorImpl {
 }
 
 #[allow(unused)]
-pub fn read_yaml_file<T, P>(path: P) -> StdResult<T, YamlError>
+pub fn read_yaml_file<T>(path: &Path) -> StdResult<T, YamlError>
 where
     T: DeserializeOwned,
-    P: AsRef<Path>,
 {
-    let s = read_text_file(path.as_ref()).map_err(YamlError::other)?;
-    let value = serde_yaml::from_str::<T>(&s).map_err(|e| YamlError::convert(e, &path))?;
+    let s = read_text_file(path).map_err(YamlError::other)?;
+    let value = serde_yaml::from_str::<T>(&s).map_err(|e| YamlError::convert(e, path))?;
     Ok(value)
 }
 
@@ -138,7 +134,7 @@ mod tests {
         write(&path, "{\"message\": \"hello-world\"}")?;
 
         // Act
-        let value = read_yaml_file::<Value, _>(&path)?;
+        let value = read_yaml_file::<Value>(&path)?;
 
         // Assert
         assert_eq!(
@@ -156,7 +152,7 @@ mod tests {
         write(&path, "xxx{\"message\": \"hello-world\"}")?;
 
         // Act
-        let e = match read_yaml_file::<Value, _>(&path) {
+        let e = match read_yaml_file::<Value>(&path) {
             Ok(_) => panic!("read_yaml_file must fail"),
             Err(e) => e,
         };
@@ -177,7 +173,7 @@ mod tests {
         let path = temp_dir.path().join("file.yaml");
 
         // Act
-        let e = match read_yaml_file::<Value, _>(&path) {
+        let e = match read_yaml_file::<Value>(&path) {
             Ok(_) => panic!("read_yaml_file must fail"),
             Err(e) => e,
         };
