@@ -21,22 +21,7 @@
 //
 use chrono::{DateTime, SecondsFormat, Utc};
 use std::ffi::OsString;
-use std::path::{Component, Path, PathBuf};
-
-pub fn path_to_str(path: &Path) -> &str {
-    path.to_str()
-        .expect("Path contains invalid Unicode characters")
-}
-
-pub fn get_base_name(path: &Path) -> Option<&str> {
-    path.components().last().and_then(|x| {
-        if let Component::Normal(s) = x {
-            s.to_str()
-        } else {
-            None
-        }
-    })
-}
+use std::path::{Path, PathBuf};
 
 pub fn label_file_name(path: &Path, label: &str) -> Option<PathBuf> {
     let mut file_name = OsString::new();
@@ -65,41 +50,10 @@ pub fn file_name_safe_timestamp(dt: &DateTime<Utc>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{file_name_safe_timestamp, get_base_name, label_file_name, path_to_str};
+    use super::{file_name_safe_timestamp, label_file_name};
     use chrono::{TimeZone, Utc};
     use rstest::rstest;
-    use std::path::{Path, PathBuf};
-
-    // https://doc.rust-lang.org/stable/std/ffi/index.html#conversions
-    #[cfg(not(target_os = "windows"))]
-    fn make_path_containing_invalid_unicode() -> std::path::PathBuf {
-        use std::ffi::OsString;
-        use std::os::unix::ffi::OsStringExt;
-        const INVALID_UTF8: [u8; 1] = [192];
-        PathBuf::from(OsString::from_vec(INVALID_UTF8.to_vec()))
-    }
-
-    #[rstest]
-    #[case(Some("file"), Path::new("/path/to/file"))]
-    #[case(None, Path::new(""))]
-    #[case(None, Path::new("/"))]
-    fn get_base_name_basics(#[case] expected_base_name: Option<&str>, #[case] input: &Path) {
-        assert_eq!(expected_base_name, get_base_name(input));
-    }
-
-    #[rstest]
-    #[case("/path/to/file", Path::new("/path/to/file"))]
-    fn path_to_str_basics(#[case] expected_str: &str, #[case] input: &Path) {
-        assert_eq!(expected_str, path_to_str(input));
-    }
-
-    #[test]
-    #[should_panic]
-    #[cfg(not(target_os = "windows"))]
-    fn path_to_str_invalid_unicode_panics() {
-        let path = make_path_containing_invalid_unicode();
-        _ = path_to_str(&path)
-    }
+    use std::path::PathBuf;
 
     #[rstest]
     #[case(Some(PathBuf::from("/aaa/bbb/ccc-ddd.txt")), "/aaa/bbb/ccc.txt", "ddd")]
