@@ -82,7 +82,8 @@ mod tests {
     #[rstest]
     #[case(Some("file"), Path::new("/path/to/file"))]
     #[case(None, Path::new(""))]
-    fn base_name_basics(#[case] expected_base_name: Option<&str>, #[case] input: &Path) {
+    #[case(None, Path::new("/"))]
+    fn get_base_name_basics(#[case] expected_base_name: Option<&str>, #[case] input: &Path) {
         assert_eq!(expected_base_name, get_base_name(input));
     }
 
