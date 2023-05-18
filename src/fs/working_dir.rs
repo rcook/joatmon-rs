@@ -61,17 +61,20 @@ mod tests {
     use anyhow::Result;
     use serial_test::serial;
     use std::env::current_dir;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use tempdir::TempDir;
 
     #[cfg(target_os = "macos")]
-    fn normalize_dir(path: &Path) -> &Path {
-        path.strip_prefix("/private").unwrap_or(path)
+    fn normalize_dir(path: &Path) -> PathBuf {
+        match path.strip_prefix("/private") {
+            Ok(p) => Path::new("/").join(p),
+            _ => path.to_path_buf(),
+        }
     }
 
     #[cfg(not(target_os = "macos"))]
-    fn normalize_dir(path: &Path) -> &Path {
-        path
+    fn normalize_dir(path: &Path) -> PathBuf {
+        path.to_path_buf()
     }
 
     #[test]
