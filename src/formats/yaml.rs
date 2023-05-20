@@ -44,7 +44,8 @@ pub struct YamlError(#[from] YamlErrorImpl);
 
 impl YamlError {
     #[allow(unused)]
-    pub fn kind(&self) -> YamlErrorKind {
+    #[must_use]
+    pub const fn kind(&self) -> YamlErrorKind {
         match self.0 {
             YamlErrorImpl::Syntax { .. } => YamlErrorKind::Syntax,
             _ => YamlErrorKind::Other,
@@ -52,11 +53,13 @@ impl YamlError {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_syntax(&self) -> bool {
         self.kind() == YamlErrorKind::Syntax
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_other(&self) -> bool {
         self.kind() == YamlErrorKind::Other
     }
@@ -68,7 +71,7 @@ impl YamlError {
         Self(YamlErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert(e: SerdeYamlError, path: &Path) -> Self {
+    fn convert(e: &SerdeYamlError, path: &Path) -> Self {
         Self(YamlErrorImpl::Syntax {
             message: e.to_string(),
             location: e.location(),
@@ -86,7 +89,7 @@ impl HasOtherError for YamlError {
     where
         E: Display + Debug + Send + Sync + 'static,
     {
-        if let YamlErrorImpl::Other(inner) = &self.0 {
+        if let YamlErrorImpl::Other(ref inner) = self.0 {
             inner.downcast_ref::<E>()
         } else {
             None
@@ -112,7 +115,7 @@ where
     T: DeserializeOwned,
 {
     let s = read_text_file(path).map_err(YamlError::other)?;
-    let value = serde_yaml::from_str::<T>(&s).map_err(|e| YamlError::convert(e, path))?;
+    let value = serde_yaml::from_str::<T>(&s).map_err(|e| YamlError::convert(&e, path))?;
     Ok(value)
 }
 

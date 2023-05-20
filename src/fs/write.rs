@@ -43,7 +43,8 @@ pub struct FileWriteError(#[from] FileWriteErrorImpl);
 
 impl FileWriteError {
     #[allow(unused)]
-    pub fn kind(&self) -> FileWriteErrorKind {
+    #[must_use]
+    pub const fn kind(&self) -> FileWriteErrorKind {
         match self.0 {
             FileWriteErrorImpl::AlreadyExists(_) => FileWriteErrorKind::AlreadyExists,
             _ => FileWriteErrorKind::Other,
@@ -51,11 +52,13 @@ impl FileWriteError {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_already_exists(&self) -> bool {
         self.kind() == FileWriteErrorKind::AlreadyExists
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_other(&self) -> bool {
         self.kind() == FileWriteErrorKind::Other
     }
@@ -85,7 +88,7 @@ impl HasOtherError for FileWriteError {
     where
         E: Display + Debug + Send + Sync + 'static,
     {
-        if let FileWriteErrorImpl::Other(inner) = &self.0 {
+        if let FileWriteErrorImpl::Other(ref inner) = self.0 {
             inner.downcast_ref::<E>()
         } else {
             None

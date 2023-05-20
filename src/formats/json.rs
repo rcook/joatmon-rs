@@ -47,7 +47,8 @@ pub struct JsonError(#[from] JsonErrorImpl);
 
 impl JsonError {
     #[allow(unused)]
-    pub fn kind(&self) -> JsonErrorKind {
+    #[must_use]
+    pub const fn kind(&self) -> JsonErrorKind {
         match self.0 {
             JsonErrorImpl::Data { .. } => JsonErrorKind::Data,
             JsonErrorImpl::Eof { .. } => JsonErrorKind::Eof,
@@ -58,26 +59,31 @@ impl JsonError {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_data(&self) -> bool {
         self.kind() == JsonErrorKind::Data
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_eof(&self) -> bool {
         self.kind() == JsonErrorKind::Eof
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_io(&self) -> bool {
         self.kind() == JsonErrorKind::Io
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_syntax(&self) -> bool {
         self.kind() == JsonErrorKind::Syntax
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_other(&self) -> bool {
         self.kind() == JsonErrorKind::Other
     }
@@ -89,7 +95,7 @@ impl JsonError {
         Self(JsonErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert(e: SerdeJsonError, path: &Path) -> Self {
+    fn convert(e: &SerdeJsonError, path: &Path) -> Self {
         use serde_json::error::Category::*;
 
         let message = e.to_string();
@@ -112,7 +118,7 @@ impl HasOtherError for JsonError {
     where
         E: Display + Debug + Send + Sync + 'static,
     {
-        if let JsonErrorImpl::Other(inner) = &self.0 {
+        if let JsonErrorImpl::Other(ref inner) = self.0 {
             inner.downcast_ref::<E>()
         } else {
             None
@@ -140,7 +146,7 @@ where
     T: DeserializeOwned,
 {
     let s = read_text_file(path).map_err(JsonError::other)?;
-    let value = serde_json::from_str::<T>(&s).map_err(|e| JsonError::convert(e, path))?;
+    let value = serde_json::from_str::<T>(&s).map_err(|e| JsonError::convert(&e, path))?;
     Ok(value)
 }
 

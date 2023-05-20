@@ -23,6 +23,7 @@ use chrono::{DateTime, SecondsFormat, Utc};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
+#[must_use]
 pub fn label_file_name(path: &Path, label: &str) -> Option<PathBuf> {
     let mut file_name = OsString::new();
 
@@ -37,12 +38,13 @@ pub fn label_file_name(path: &Path, label: &str) -> Option<PathBuf> {
 
     if let Some(s) = path.extension() {
         file_name.push(".");
-        file_name.push(s)
+        file_name.push(s);
     }
 
     Some(path.with_file_name(file_name))
 }
 
+#[must_use]
 pub fn file_name_safe_timestamp(dt: &DateTime<Utc>) -> String {
     dt.to_rfc3339_opts(SecondsFormat::Millis, true)
         .replace(['-', ':', '.'], "")

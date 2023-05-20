@@ -44,7 +44,8 @@ pub struct FileReadError(#[from] FileReadErrorImpl);
 
 impl FileReadError {
     #[allow(unused)]
-    pub fn kind(&self) -> FileReadErrorKind {
+    #[must_use]
+    pub const fn kind(&self) -> FileReadErrorKind {
         match self.0 {
             FileReadErrorImpl::IsADirectory(_) => FileReadErrorKind::IsADirectory,
             FileReadErrorImpl::NotFound(_) => FileReadErrorKind::NotFound,
@@ -53,16 +54,19 @@ impl FileReadError {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_is_a_directory(&self) -> bool {
         self.kind() == FileReadErrorKind::IsADirectory
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_not_found(&self) -> bool {
         self.kind() == FileReadErrorKind::NotFound
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_other(&self) -> bool {
         self.kind() == FileReadErrorKind::Other
     }
@@ -87,7 +91,7 @@ impl FileReadError {
             // io_error_more adds std::io::ErrorKind::IsADirectory etc.
             // https://doc.rust-lang.org/stable/std/io/enum.ErrorKind.html#variant.IsADirectory
             // For now, we'll match on the debug string for these unstable values
-            format!("{:?}", kind).as_str() == "IsADirectory"
+            format!("{kind:?}").as_str() == "IsADirectory"
         }
 
         let kind = e.kind();
@@ -113,7 +117,7 @@ impl HasOtherError for FileReadError {
     where
         E: Display + Debug + Send + Sync + 'static,
     {
-        if let FileReadErrorImpl::Other(inner) = &self.0 {
+        if let FileReadErrorImpl::Other(ref inner) = self.0 {
             inner.downcast_ref::<E>()
         } else {
             None

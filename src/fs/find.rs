@@ -22,6 +22,7 @@
 use std::path::{Path, PathBuf};
 
 #[allow(unused)]
+#[must_use]
 pub fn find_sentinel_dir(
     sentinel_name: &Path,
     start_dir: &Path,
@@ -49,6 +50,7 @@ pub fn find_sentinel_dir(
 }
 
 #[allow(unused)]
+#[must_use]
 pub fn find_sentinel_file(
     sentinel_name: &Path,
     start_dir: &Path,

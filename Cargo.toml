@@ -1,11 +1,15 @@
 [package]
 authors = ["Richard Cook"]
+categories = ["encoding", "filesystem"]
 description = "Jack of All Trades Master of None"
-homepage = "https://github.com/rcook/joatmon-rs/"
+edition = "2021"
+keywords = ["general"]
+homepage = "https://github.com/rcook/joatmon-rs"
 license = "MIT"
 name = "joatmon"
+repository = "https://github.com/rcook/joatmon-rs"
 version = "0.0.27"
-edition = "2021"
+
 
 [dependencies]
 anyhow = "1.0.70"

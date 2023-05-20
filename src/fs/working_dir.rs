@@ -38,20 +38,18 @@ impl WorkingDirectory {
     }
 
     pub fn close(&mut self) -> IOResult<()> {
-        match &self.saved_dir {
-            Some(d) => {
-                set_current_dir(d)?;
-                self.saved_dir = None
-            }
-            None => (),
+        if let Some(ref d) = self.saved_dir {
+            set_current_dir(d)?;
+            self.saved_dir = None;
         };
         Ok(())
     }
 }
 
 impl Drop for WorkingDirectory {
+    #[allow(clippy::let_underscore_must_use)]
     fn drop(&mut self) {
-        _ = self.close()
+        _ = self.close();
     }
 }
 

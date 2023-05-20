@@ -45,7 +45,8 @@ pub struct TomlError(#[from] TomlErrorImpl);
 
 impl TomlError {
     #[allow(unused)]
-    pub fn kind(&self) -> TomlErrorKind {
+    #[must_use]
+    pub const fn kind(&self) -> TomlErrorKind {
         match self.0 {
             TomlErrorImpl::Syntax { .. } => TomlErrorKind::Syntax,
             _ => TomlErrorKind::Other,
@@ -53,11 +54,13 @@ impl TomlError {
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_syntax(&self) -> bool {
         self.kind() == TomlErrorKind::Syntax
     }
 
     #[allow(unused)]
+    #[must_use]
     pub fn is_other(&self) -> bool {
         self.kind() == TomlErrorKind::Other
     }
@@ -69,16 +72,17 @@ impl TomlError {
         Self(TomlErrorImpl::Other(AnyhowError::new(e)))
     }
 
-    fn convert(e: TomlDeError, path: &Path) -> Self {
-        let message = match e.span() {
-            Some(s) => format!(
+    fn convert(e: &TomlDeError, path: &Path) -> Self {
+        let message = if let Some(s) = e.span() {
+            format!(
                 "{} at span {}:{} in {}",
                 e.message(),
                 s.start,
                 s.end,
                 path.display()
-            ),
-            None => format!("{} in {}", e.message(), path.display()),
+            )
+        } else {
+            format!("{} in {}", e.message(), path.display())
         };
 
         Self(TomlErrorImpl::Syntax {
@@ -88,16 +92,17 @@ impl TomlError {
         })
     }
 
-    fn convert_edit(e: TomlEditError, path: &Path) -> Self {
-        let message = match e.span() {
-            Some(s) => format!(
+    fn convert_edit(e: &TomlEditError, path: &Path) -> Self {
+        let message = if let Some(s) = e.span() {
+            format!(
                 "{} at span {}:{} in {}",
                 e.message(),
                 s.start,
                 s.end,
                 path.display()
-            ),
-            None => format!("{} in {}", e.message(), path.display()),
+            )
+        } else {
+            format!("{} in {}", e.message(), path.display())
         };
 
         Self(TomlErrorImpl::Syntax {
@@ -117,7 +122,7 @@ impl HasOtherError for TomlError {
     where
         E: Display + Debug + Send + Sync + 'static,
     {
-        if let TomlErrorImpl::Other(inner) = &self.0 {
+        if let TomlErrorImpl::Other(ref inner) = self.0 {
             inner.downcast_ref::<E>()
         } else {
             None
@@ -143,7 +148,7 @@ where
     T: DeserializeOwned,
 {
     let s = read_text_file(path).map_err(TomlError::other)?;
-    let value = toml::from_str::<T>(&s).map_err(|e| TomlError::convert(e, path))?;
+    let value = toml::from_str::<T>(&s).map_err(|e| TomlError::convert(&e, path))?;
     Ok(value)
 }
 
@@ -152,7 +157,7 @@ pub fn read_toml_file_edit(path: &Path) -> StdResult<Document, TomlError> {
     let s = read_text_file(path).map_err(TomlError::other)?;
     let doc = s
         .parse::<Document>()
-        .map_err(|e| TomlError::convert_edit(e, path))?;
+        .map_err(|e| TomlError::convert_edit(&e, path))?;
     Ok(doc)
 }
 
