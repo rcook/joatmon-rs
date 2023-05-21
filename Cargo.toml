@@ -8,7 +8,7 @@ homepage = "https://github.com/rcook/joatmon-rs"
 license = "MIT"
 name = "joatmon"
 repository = "https://github.com/rcook/joatmon-rs"
-version = "0.0.27"
+version = "0.0.28"
 
 
 [dependencies]
