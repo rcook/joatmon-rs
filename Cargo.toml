@@ -3,13 +3,12 @@ authors = ["Richard Cook"]
 categories = ["encoding", "filesystem"]
 description = "Jack of All Trades Master of None"
 edition = "2021"
-keywords = ["general"]
 homepage = "https://github.com/rcook/joatmon-rs"
+keywords = ["general"]
 license = "MIT"
 name = "joatmon"
 repository = "https://github.com/rcook/joatmon-rs"
 version = "0.0.28"
-
 
 [dependencies]
 anyhow = "1.0.70"
