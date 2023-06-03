@@ -67,7 +67,7 @@ mod tests {
         #[case] path: PathBuf,
         #[case] label: &str,
     ) {
-        assert_eq!(expected_path, label_file_name(&path, label))
+        assert_eq!(expected_path, label_file_name(&path, label));
     }
 
     #[test]

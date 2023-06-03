@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(YamlErrorKind::Syntax, e.kind());
         assert!(e.is_syntax());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }
@@ -185,7 +185,7 @@ mod tests {
         assert_eq!(YamlErrorKind::Other, e.kind());
         assert!(!e.is_syntax());
         assert!(e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         assert!(e
             .downcast_other_ref::<FileReadError>()

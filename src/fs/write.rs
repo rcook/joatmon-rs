@@ -206,7 +206,7 @@ mod tests {
         assert_eq!(FileWriteErrorKind::AlreadyExists, e.kind());
         assert!(e.is_already_exists());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         assert_eq!("hello-world", read_to_string(&path)?);
         Ok(())
@@ -273,7 +273,7 @@ mod tests {
         assert_eq!(FileWriteErrorKind::AlreadyExists, e.kind());
         assert!(e.is_already_exists());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         assert_eq!("hello-world", read_to_string(&path)?);
         Ok(())

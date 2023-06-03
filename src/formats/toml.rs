@@ -201,7 +201,7 @@ mod tests {
         assert_eq!(TomlErrorKind::Syntax, e.kind());
         assert!(e.is_syntax());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }
@@ -263,7 +263,7 @@ toml_edit = "0.19.8"
         assert_eq!(TomlErrorKind::Syntax, e.kind());
         assert!(e.is_syntax());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }

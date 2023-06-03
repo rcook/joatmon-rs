@@ -189,7 +189,7 @@ mod tests {
         assert!(e.is_is_a_directory());
         assert!(!e.is_not_found());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(temp_dir.path().to_str().expect("must be valid string")));
         Ok(())
     }
@@ -211,7 +211,7 @@ mod tests {
         assert!(!e.is_is_a_directory());
         assert!(e.is_not_found());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(FileReadErrorKind::NotFound, e.kind());
         assert!(e.is_not_found());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }
@@ -285,7 +285,7 @@ mod tests {
         assert_eq!(FileReadErrorKind::NotFound, e.kind());
         assert!(e.is_not_found());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }

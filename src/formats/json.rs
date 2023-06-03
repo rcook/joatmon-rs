@@ -193,7 +193,7 @@ mod tests {
         assert!(!e.is_io());
         assert!(e.is_syntax());
         assert!(!e.is_other());
-        let message = format!("{}", e);
+        let message = format!("{e}");
         assert!(message.contains(path.to_str().expect("must be valid string")));
         Ok(())
     }
