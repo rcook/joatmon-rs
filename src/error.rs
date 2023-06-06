@@ -21,10 +21,16 @@
 //
 use std::fmt::{Debug, Display};
 
+/// An error that can wrap an inner error that can be retrieved, if
+/// present, via downcasting
 pub trait HasOtherError {
+    /// Returns `true` if error wraps an inner error; `false` otherwise
     fn is_other(&self) -> bool;
 
+    /// Attempt to downcast to type `E` if error wraps an inner error;
+    /// returns `None` if there is no inner error or if the inner error
+    /// is not of type `E`
     fn downcast_other_ref<E>(&self) -> Option<&E>
     where
-        E: Display + Debug + Send + Sync + 'static;
+        E: Debug + Display + Send + Sync + 'static;
 }
