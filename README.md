@@ -3,6 +3,7 @@
 [![CI](https://github.com/rcook/joatmon-rs/actions/workflows/ci.yaml/badge.svg)][ci-workflow]
 [![Publish](https://github.com/rcook/joatmon-rs/actions/workflows/publish.yaml/badge.svg)][publish-workflow]
 [![crates.io](https://img.shields.io/crates/v/joatmon.svg)][crates-io]
+[![Docs](https://docs.rs/joatmon/badge.svg)](https://docs.rs/joatmon)
 
 General-purpose helpers functions including  file system functions with
 improved error messages etc.
