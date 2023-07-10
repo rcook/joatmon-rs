@@ -22,5 +22,5 @@ toml_edit = "0.19.10"
 
 [dev-dependencies]
 serial_test = "2.0.0"
-rstest = "0.17.0"
+rstest = "0.18.1"
 tempdir = "0.3.7"
