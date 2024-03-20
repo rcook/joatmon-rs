@@ -29,7 +29,7 @@ use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use thiserror::Error;
 use toml::de::Error as TomlDeError;
-use toml_edit::{Document, TomlError as TomlEditError};
+use toml_edit::{DocumentMut, TomlError as TomlEditError};
 
 #[allow(unused)]
 #[derive(Debug, PartialEq)]
@@ -153,10 +153,10 @@ where
 }
 
 #[allow(unused)]
-pub fn read_toml_file_edit(path: &Path) -> StdResult<Document, TomlError> {
+pub fn read_toml_file_edit(path: &Path) -> StdResult<DocumentMut, TomlError> {
     let s = read_text_file(path).map_err(TomlError::other)?;
     let doc = s
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .map_err(|e| TomlError::convert_edit(&e, path))?;
     Ok(doc)
 }

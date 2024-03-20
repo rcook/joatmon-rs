@@ -12,16 +12,16 @@ repository = "https://github.com/rcook/joatmon-rs.git"
 version = "0.0.33"
 
 [dependencies]
-anyhow = "1.0.75"
-chrono = "0.4.31"
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.107"
-serde_yaml = "0.9.25"
-thiserror = "1.0.48"
-toml = "0.8.0"
-toml_edit = "0.20.0"
+anyhow = "1.0.81"
+chrono = "0.4.35"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+serde_yaml = "0.9.33"
+thiserror = "1.0.58"
+toml = "0.8.12"
+toml_edit = "0.22.9"
 
 [dev-dependencies]
-serial_test = "2.0.0"
+serial_test = "3.0.0"
 rstest = "0.18.2"
 tempdir = "0.3.7"
